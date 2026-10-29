@@ -123,6 +123,10 @@ Then, in the Supabase dashboard → **SQL Editor** (runs as the database owner, 
    profiles, groups, memberships; PART 2 is commented out in it).
 2. Paste and run **`supabase/seed/part2_reference_meetups.sql`** (PART 2 adapted to this schema).
 
+Or do both from the terminal with the same owner privileges: `npm run db:seed` runs the provided
+`altair-seed-data.sql` unchanged in one transaction (it refuses to load PART 1 twice), then PART 2,
+and prints the resulting counts (8 accounts, 2 groups, 8 memberships, 3 meetups, 3 RSVPs).
+
 Check that a seed account can sign in (prints an access token):
 
 ```bash
@@ -159,6 +163,7 @@ npm run mobile          # Expo dev server; press "a" for the Android emulator, o
 npm run test:offline   # no network, no credentials: shared + server (unit, API, DB on embedded Postgres 17) + mobile
 npm run test:hosted    # against your Supabase project (needs .env)
 npm run lint && npm run typecheck && npm run format:check
+npm run demo:privacy   # with the server running: outsider and non-RSVP results via the API and Supabase directly
 ```
 
 The hosted suite signs in as the seed accounts, re-runs `part2_reference_meetups.sql` before each
@@ -219,15 +224,24 @@ shape `{ "error": { "code", "message", "issues"? } }`.
 
 ## Troubleshooting
 
-- **`npm ci` or Expo complains about the Node version**: Expo SDK 58 needs Node ≥ 22.13.
+- **`npm ci` or Expo complains about the Node version**: Expo SDK 58 needs Node ≥ 22.13. If you
+  keep an older system Node, put a Node 22 folder first on the PATH in each terminal, e.g. in
+  PowerShell `$env:PATH = "C:\path\to\node22;$env:PATH"`, and check `node --version`.
+- **Windows PowerShell: "running scripts is disabled on this system"** when calling `npm` or
+  `npx`: use `npm.cmd` / `npx.cmd`, or allow scripts for that window only with
+  `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass`.
+- **Windows PowerShell drops a bare `--`**, so `npm run x -- --flag` passes `--flag` to npm, not to
+  the script. Use the dedicated scripts (`npm run db:push:dry`) or run the tool directly
+  (`cd mobile; npx.cmd expo start --clear`).
 - **npm 10 crashes with `Cannot read properties of null (reading 'edgesOut')`**: a known npm 10
   arborist bug with this workspace; npm 11 works (`npx npm@11 ci`).
 - **`db push` cannot connect**: use the _Session pooler_ string (IPv4); check Database → Network
-  restrictions; percent-encode special characters in the password (`@` → `%40`). `--dry-run`
-  shows what would be applied without changing anything.
+  restrictions; percent-encode special characters in the password (`@` → `%40`); replace the
+  dashboard's literal `[YOUR-PASSWORD]` placeholder. `npm run db:push:dry` shows what would be
+  applied without changing anything.
 - **`db push` says a migration was already applied / the starter's tables exist**: the starter was
   applied some other way (e.g. pasted in the SQL editor). Never apply it twice; see
-  ENGINEERING_NOTES.md → "If the starter was already applied".
+  ENGINEERING_NOTES.md → "Setup notes" for the one-line repair.
 - **App shows "App is not configured"**: `mobile/.env` is missing or incomplete; restart
   `npm run mobile` after editing it (`npx expo start -c` clears the cache).
 - **App shows "Could not reach the server"**: `EXPO_PUBLIC_API_URL` is not reachable from the
