@@ -6,6 +6,7 @@ export type RootStackParamList = {
   MeetupDetail: { meetupId: string; flash?: 'created' | 'updated' };
   CreateMeetup: { groupId: string };
   EditMeetup: { meetupId: string };
+  LiveWalk: { meetupId: string };
 };
 
 export type ScreenProps<Name extends keyof RootStackParamList> = NativeStackScreenProps<

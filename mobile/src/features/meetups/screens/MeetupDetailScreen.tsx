@@ -63,6 +63,14 @@ export function MeetupDetailScreen({ route, navigation }: ScreenProps<'MeetupDet
         </Text>
         <AttendeeList attendees={query.data.attendees} currentUserId={currentUserId} />
       </Card>
+      {query.data.status === 'scheduled' && query.data.meetingPoint.visibility === 'exact' ? (
+        <Button
+          label="Live walk (demo)"
+          variant="ghost"
+          onPress={() => navigation.navigate('LiveWalk', { meetupId })}
+          testID="live-walk-button"
+        />
+      ) : null}
       {query.data.viewer.canEdit ? (
         <Button
           label="Edit meetup"

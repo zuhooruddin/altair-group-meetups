@@ -1,6 +1,7 @@
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useAuth } from '../features/auth/AuthProvider';
+import { LiveWalkScreen } from '../features/live-walk/LiveWalkScreen';
 import { SignInScreen } from '../features/auth/SignInScreen';
 import { CreateMeetupScreen } from '../features/meetups/screens/CreateMeetupScreen';
 import { EditMeetupScreen } from '../features/meetups/screens/EditMeetupScreen';
@@ -61,6 +62,11 @@ export function RootNavigator() {
               name="EditMeetup"
               component={EditMeetupScreen}
               options={{ title: 'Edit meetup', presentation: 'modal' }}
+            />
+            <Stack.Screen
+              name="LiveWalk"
+              component={LiveWalkScreen}
+              options={{ title: 'Live walk (demo)' }}
             />
           </>
         )}

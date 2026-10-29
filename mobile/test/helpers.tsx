@@ -31,6 +31,7 @@ export function fakeServices(
   return {
     auth: { ...fakeAuth(userId), ...overrides.auth },
     groups: { listMine: reject, ...overrides.groups },
+    liveWalk: { join: () => () => undefined, ...overrides.liveWalk },
     meetups: {
       listForGroup: reject,
       get: reject,

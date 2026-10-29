@@ -16,6 +16,25 @@ grant usage on schema public to anon, authenticated, service_role;
 alter default privileges in schema public grant all on tables to anon, authenticated, service_role;
 alter default privileges in schema public grant all on functions to anon, authenticated, service_role;
 
+-- Realtime Authorization surface: Supabase evaluates RLS on realtime.messages
+-- with realtime.topic() = the channel name. Only what the policies touch.
+create schema realtime;
+grant usage on schema realtime to anon, authenticated, service_role;
+create table realtime.messages (
+  id bigserial primary key,
+  topic text not null,
+  extension text not null,
+  payload jsonb,
+  event text,
+  private boolean default false,
+  inserted_at timestamptz not null default now()
+);
+alter table realtime.messages enable row level security;
+grant select, insert on realtime.messages to anon, authenticated;
+grant usage on sequence realtime.messages_id_seq to anon, authenticated;
+create function realtime.topic() returns text language sql stable
+  as $$ select nullif(current_setting('realtime.topic', true), '')::text $$;
+
 create schema auth;
 
 -- Only the columns the provided seed writes.

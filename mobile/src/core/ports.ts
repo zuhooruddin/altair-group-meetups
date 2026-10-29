@@ -41,8 +41,23 @@ export interface MeetupsGateway {
   withdraw(meetupId: string): Promise<MeetupDetail>;
 }
 
+export type LiveWalkStatus = 'joining' | 'live' | 'denied' | 'error' | 'closed';
+
+/** Bonus work sample: a private Realtime channel per meetup carrying synthetic positions. */
+export interface LiveWalkGateway {
+  /** Joins the meetup's channel. Payloads are untrusted: the caller validates them. Returns `leave`. */
+  join(
+    meetupId: string,
+    handlers: {
+      onPosition: (payload: unknown, receivedAt: number) => void;
+      onStatus: (status: LiveWalkStatus) => void;
+    },
+  ): () => void;
+}
+
 export interface AppServices {
   auth: AuthGateway;
   groups: GroupsGateway;
   meetups: MeetupsGateway;
+  liveWalk: LiveWalkGateway;
 }

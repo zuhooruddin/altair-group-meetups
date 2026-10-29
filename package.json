@@ -13,6 +13,7 @@
   "scripts": {
     "db:push": "node scripts/db-push.mjs",
     "db:reset-reference": "npm run db:reset-reference --workspace @altair/server",
+    "live:simulate": "npm run live:simulate --workspace @altair/server --",
     "server": "npm run start --workspace @altair/server",
     "server:dev": "npm run dev --workspace @altair/server",
     "mobile": "npm run start --workspace @altair/mobile",

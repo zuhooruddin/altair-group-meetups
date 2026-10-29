@@ -5,7 +5,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { readAppConfig } from './config/env';
 import { ApiClient } from './core/api/api-client';
 import { createGroupsGateway, createMeetupsGateway } from './core/api/gateways';
-import { createSupabaseAuthGateway } from './core/auth/supabase-auth-gateway';
+import { createSupabaseGateways } from './core/supabase/supabase-gateways';
 import type { AppServices } from './core/ports';
 import { ServicesProvider } from './core/services';
 import { AuthProvider } from './features/auth/AuthProvider';
@@ -16,9 +16,17 @@ import { ErrorState } from './ui/StateViews';
 function createServices(): AppServices | { problems: string[] } {
   const result = readAppConfig();
   if (!result.ok) return { problems: result.problems };
-  const auth = createSupabaseAuthGateway(result.config.supabaseUrl, result.config.supabaseAnonKey);
+  const { auth, liveWalk } = createSupabaseGateways(
+    result.config.supabaseUrl,
+    result.config.supabaseAnonKey,
+  );
   const api = new ApiClient(result.config.apiUrl, () => auth.accessToken());
-  return { auth, groups: createGroupsGateway(api), meetups: createMeetupsGateway(api) };
+  return {
+    auth,
+    liveWalk,
+    groups: createGroupsGateway(api),
+    meetups: createMeetupsGateway(api),
+  };
 }
 
 export function AppRoot({ services }: { services: AppServices }) {

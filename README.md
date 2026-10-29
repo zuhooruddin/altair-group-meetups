@@ -19,7 +19,7 @@ and seed.
 | Shared contract | `packages/shared`: Zod 4 request/response schemas imported by the server **and** the app.                                                                                                            |
 | App             | Expo (SDK 58) React Native: sign-in, group meetup list, create, detail with map + RSVP + creator-only cancel, bonus edit.                                                                            |
 | Privacy         | Members who have not RSVP'd get an offset 400 m area, never the exact coordinates or place name. Home locations are not readable by any client-facing role.                                          |
-| Tests           | 189 offline tests (embedded Postgres 17 running the real migrations + seed) and a hosted suite against real Supabase Auth/PostgREST/Postgres.                                                        |
+| Tests           | 222 offline tests (embedded Postgres 17 running the real migrations + seed) and a hosted suite against real Supabase Auth/PostgREST/Postgres.                                                        |
 
 ## Architecture
 
@@ -160,6 +160,20 @@ npm run lint && npm run typecheck && npm run format:check
 The hosted suite signs in as the seed accounts, re-runs `part2_reference_meetups.sql` before each
 test (only the three reference meetups are reset) and deletes meetups it created (titles start with
 `[test]`). It never touches other data.
+
+## Bonuses
+
+- **(a) Edit a meetup**: creator-only `PATCH /v1/meetups/:id`, an "Edit meetup" screen from the
+  detail (shown to the creator only). Covered by contract, DB, API and app tests.
+- **(b) Live walk map work sample**: synthetic walkers over a private Supabase Realtime channel
+  with interpolation and viewport culling. See [REALTIME_MAP_BONUS.md](REALTIME_MAP_BONUS.md).
+  To see it: sign in as a creator or attendee (e.g. `jordan@example.test`), open "Saturday morning
+  loop" → **Live walk (demo)**, and in another terminal run:
+
+  ```bash
+  npm run live:simulate                    # 12 walkers every 2 s on "Saturday morning loop"
+  npm run live:simulate -- --chaos         # also late, duplicated and invalid messages
+  ```
 
 ## Seed accounts
 
