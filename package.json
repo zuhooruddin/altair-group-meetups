@@ -11,7 +11,8 @@
     "mobile"
   ],
   "scripts": {
-    "db:push": "supabase db push --db-url \"$DATABASE_URL\"",
+    "db:push": "node scripts/db-push.mjs",
+    "db:reset-reference": "npm run db:reset-reference --workspace @altair/server",
     "server": "npm run start --workspace @altair/server",
     "server:dev": "npm run dev --workspace @altair/server",
     "mobile": "npm run start --workspace @altair/mobile",
