@@ -8,7 +8,8 @@ import type { ScreenProps } from '../../../navigation/types';
 import { Button } from '../../../ui/Button';
 import { EmptyState, ErrorState, LoadingState } from '../../../ui/StateViews';
 import { colors, spacing, typography } from '../../../ui/theme';
-import { useAuth } from '../../auth/AuthProvider';
+import { useAuth, useCurrentUserId } from '../../auth/AuthProvider';
+import { Avatar } from '../../../ui/Avatar';
 import { GroupPicker } from '../../groups/GroupPicker';
 import { useMyGroups } from '../../groups/hooks';
 import { MeetupCard } from '../components/MeetupCard';
@@ -16,6 +17,7 @@ import { useGroupMeetups } from '../hooks';
 
 export function MeetupListScreen({ navigation }: ScreenProps<'Meetups'>) {
   const { signOut } = useAuth();
+  const currentUserId = useCurrentUserId();
   const groupsQuery = useMyGroups();
   const [selectedGroupId, setSelectedGroupId] = useState<string | undefined>();
   const meetupsQuery = useGroupMeetups(selectedGroupId);
@@ -80,7 +82,7 @@ export function MeetupListScreen({ navigation }: ScreenProps<'Meetups'>) {
         keyExtractor={(m) => m.id}
         renderItem={({ item }) => <MeetupCard meetup={item} onPress={openMeetup} />}
         contentContainerStyle={meetupsQuery.data.length === 0 ? styles.emptyContainer : styles.list}
-        ItemSeparatorComponent={() => <View style={{ height: spacing.md }} />}
+        ItemSeparatorComponent={() => <View style={{ height: spacing.sm }} />}
         refreshControl={
           <RefreshControl
             refreshing={meetupsQuery.isRefetching}
@@ -102,16 +104,33 @@ export function MeetupListScreen({ navigation }: ScreenProps<'Meetups'>) {
 
   return (
     <SafeAreaView style={styles.safe} edges={['bottom']}>
+      <View style={styles.welcome}>
+        <View style={styles.welcomeCopy}>
+          <Text style={styles.eyebrow}>A LITTLE FRESH AIR, TOGETHER</Text>
+          <Text style={styles.greeting}>Hello, neighbor.</Text>
+          <Text style={styles.subtitle}>Your next walk starts here.</Text>
+        </View>
+        <View style={styles.welcomeIcon}>
+          <Avatar userId={currentUserId ?? undefined} name="Your profile" size={54} />
+        </View>
+      </View>
+      <Text style={styles.groupsTitle}>Your groups</Text>
       <GroupPicker
         groups={groupsQuery.data}
         selectedId={selectedGroupId}
         onSelect={setSelectedGroupId}
       />
-      <Text style={styles.sectionLabel}>Upcoming & recent · soonest first</Text>
+      <View style={styles.sectionHeading}>
+        <Text style={styles.sectionLabel}>Upcoming meetups</Text>
+        <View style={styles.sortLabel}>
+          <Text style={styles.sortText}>Soonest first</Text>
+          <Ionicons name="swap-vertical" size={14} color={colors.primary} />
+        </View>
+      </View>
       <View style={styles.body}>{renderBody()}</View>
       <View style={styles.footer}>
         <Button
-          label="New meetup"
+          label="+  Create new meetup"
           onPress={createMeetup}
           disabled={!selectedGroupId}
           testID="new-meetup-button"
@@ -123,20 +142,54 @@ export function MeetupListScreen({ navigation }: ScreenProps<'Meetups'>) {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
-  sectionLabel: {
-    ...typography.caption,
-    color: colors.textMuted,
+  welcome: {
+    flexDirection: 'row',
+    alignItems: 'center',
     paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.xs,
+    paddingTop: spacing.md,
+    paddingBottom: spacing.lg,
   },
+  welcomeCopy: { flex: 1 },
+  eyebrow: {
+    fontSize: 10,
+    letterSpacing: 1.7,
+    fontWeight: '600',
+    color: colors.primary,
+    marginBottom: spacing.sm,
+  },
+  greeting: { ...typography.display, color: colors.text },
+  subtitle: { ...typography.caption, color: colors.textMuted, marginTop: spacing.xs },
+  welcomeIcon: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    backgroundColor: colors.secondary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  groupsTitle: { ...typography.heading, color: colors.text, paddingHorizontal: spacing.lg },
+  sectionLabel: {
+    ...typography.heading,
+    color: colors.text,
+  },
+  sectionHeading: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.sm,
+  },
+  sortLabel: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
+  sortText: { ...typography.caption, color: colors.textMuted },
   body: { flex: 1 },
-  list: { padding: spacing.lg, paddingTop: spacing.sm },
+  list: { paddingHorizontal: spacing.sm, paddingBottom: spacing.md },
   emptyContainer: { flexGrow: 1 },
   footer: {
-    padding: spacing.lg,
+    padding: spacing.sm,
     paddingTop: spacing.sm,
-    borderTopWidth: 1,
-    borderTopColor: colors.border,
     backgroundColor: colors.background,
   },
 });

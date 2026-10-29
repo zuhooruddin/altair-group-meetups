@@ -2,6 +2,7 @@ import DateTimePicker, {
   DateTimePickerAndroid,
   type DateTimePickerEvent,
 } from '@react-native-community/datetimepicker';
+import { Ionicons } from '@expo/vector-icons';
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { colors, radius, spacing, typography } from '../../../ui/theme';
 import { formatDay, formatTime } from '../format';
@@ -43,6 +44,7 @@ export function DateTimeField({ label, value, onChange, error }: Props) {
             onPress={() => openAndroid('date')}
             testID="date-button"
           >
+            <Ionicons name="calendar-outline" size={18} color={colors.primary} />
             <Text style={styles.value}>{formatDay(value.toISOString())}</Text>
           </Pressable>
           <Pressable
@@ -52,6 +54,7 @@ export function DateTimeField({ label, value, onChange, error }: Props) {
             onPress={() => openAndroid('time')}
             testID="time-button"
           >
+            <Ionicons name="time-outline" size={18} color={colors.primary} />
             <Text style={styles.value}>{formatTime(value.toISOString())}</Text>
           </Pressable>
         </View>
@@ -86,6 +89,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surface,
     paddingHorizontal: spacing.md,
     justifyContent: 'center',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
   },
   boxError: { borderColor: colors.danger },
   value: { ...typography.body, color: colors.text },

@@ -1,21 +1,16 @@
 import type { Attendee } from '@altair/shared';
 import { StyleSheet, Text, View } from 'react-native';
 import { colors, spacing, typography } from '../../../ui/theme';
-
-const initials = (name: string) =>
-  name
-    .split(/\s+/)
-    .map((part) => part[0] ?? '')
-    .join('')
-    .slice(0, 2)
-    .toUpperCase();
+import { Avatar } from '../../../ui/Avatar';
 
 export function AttendeeList({
   attendees,
   currentUserId,
+  hostUserId,
 }: {
   attendees: Attendee[];
   currentUserId: string | null;
+  hostUserId?: string;
 }) {
   if (attendees.length === 0) {
     return <Text style={styles.empty}>No one has RSVP’d yet.</Text>;
@@ -24,13 +19,12 @@ export function AttendeeList({
     <View style={styles.list} testID="attendee-list">
       {attendees.map((a) => (
         <View key={a.userId} style={styles.row}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{initials(a.displayName)}</Text>
-          </View>
+          <Avatar userId={a.userId} name={a.displayName} size={48} />
           <Text style={styles.name}>
             {a.displayName}
             {a.userId === currentUserId ? <Text style={styles.you}> (you)</Text> : null}
           </Text>
+          {a.userId === hostUserId ? <Text style={styles.host}>Host</Text> : null}
         </View>
       ))}
     </View>
@@ -38,18 +32,10 @@ export function AttendeeList({
 }
 
 const styles = StyleSheet.create({
-  list: { gap: spacing.sm },
-  row: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-  avatar: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
-    backgroundColor: colors.secondary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  avatarText: { ...typography.label, color: colors.primary },
-  name: { ...typography.body, color: colors.text },
+  list: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.lg },
+  row: { alignItems: 'center', gap: spacing.sm, width: 84 },
+  host: { ...typography.caption, color: colors.primary, fontWeight: '600', marginTop: -spacing.xs },
+  name: { ...typography.caption, color: colors.text, textAlign: 'center' },
   you: { color: colors.textMuted },
   empty: { ...typography.body, color: colors.textMuted },
 });

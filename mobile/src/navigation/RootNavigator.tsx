@@ -7,7 +7,7 @@ import { CreateMeetupScreen } from '../features/meetups/screens/CreateMeetupScre
 import { EditMeetupScreen } from '../features/meetups/screens/EditMeetupScreen';
 import { MeetupDetailScreen } from '../features/meetups/screens/MeetupDetailScreen';
 import { MeetupListScreen } from '../features/meetups/screens/MeetupListScreen';
-import { LoadingState } from '../ui/StateViews';
+import { SplashScreen } from '../ui/SplashScreen';
 import { colors } from '../ui/theme';
 import type { RootStackParamList } from './types';
 
@@ -27,7 +27,7 @@ const theme = {
 
 export function RootNavigator() {
   const { state } = useAuth();
-  if (state.status === 'loading') return <LoadingState message="Starting…" />;
+  if (state.status === 'loading') return <SplashScreen />;
 
   return (
     <NavigationContainer theme={theme}>

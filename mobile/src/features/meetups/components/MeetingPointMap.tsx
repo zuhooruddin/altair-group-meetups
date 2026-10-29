@@ -52,6 +52,18 @@ export function MeetingPointMap({ point, height = 220 }: Props) {
         toolbarEnabled={false}
         showsUserLocation={false}
         showsPointsOfInterests={false}
+        customMapStyle={[
+          { elementType: 'geometry', stylers: [{ color: '#ECEEE5' }] },
+          {
+            featureType: 'landscape.natural',
+            elementType: 'geometry',
+            stylers: [{ color: '#DCEDE1' }],
+          },
+          { featureType: 'poi.park', elementType: 'geometry', stylers: [{ color: '#C6EAD8' }] },
+          { featureType: 'water', elementType: 'geometry', stylers: [{ color: '#B9DEDC' }] },
+          { featureType: 'road', elementType: 'geometry', stylers: [{ color: '#FFFFFF' }] },
+          { elementType: 'labels.text.fill', stylers: [{ color: '#75857C' }] },
+        ]}
         accessibilityLabel={
           isExact
             ? `Map showing the exact meeting point: ${point.placeName}`
@@ -91,11 +103,11 @@ export function MeetingPointMap({ point, height = 220 }: Props) {
 }
 
 const styles = StyleSheet.create({
-  wrapper: { borderRadius: radius.lg, overflow: 'hidden', backgroundColor: colors.secondary },
+  wrapper: { borderRadius: radius.md, overflow: 'hidden', backgroundColor: colors.secondary },
   legend: {
     position: 'absolute',
     top: spacing.sm,
-    left: spacing.sm,
+    alignSelf: 'center',
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.xs,

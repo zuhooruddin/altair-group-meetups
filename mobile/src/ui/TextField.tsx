@@ -59,5 +59,5 @@ const styles = StyleSheet.create({
   boxError: { borderColor: colors.danger },
   input: { flex: 1, ...typography.body, color: colors.text, paddingVertical: spacing.sm },
   error: { ...typography.caption, color: colors.danger },
-  hint: { ...typography.caption, color: colors.textMuted },
+  hint: { ...typography.caption, color: colors.textMuted, textAlign: 'right' },
 });

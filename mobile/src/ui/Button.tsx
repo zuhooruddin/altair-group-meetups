@@ -1,4 +1,5 @@
 import { ActivityIndicator, Pressable, StyleSheet, Text, type ViewStyle } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { colors, radius, spacing, typography } from './theme';
 
 type Variant = 'primary' | 'secondary' | 'danger' | 'ghost';
@@ -34,6 +35,7 @@ export function Button({
       disabled={inactive}
       style={({ pressed }) => [
         styles.base,
+        variant === 'primary' && styles.withArrow,
         {
           backgroundColor: pressed ? palette.pressed : palette.background,
           borderColor: palette.border,
@@ -45,7 +47,12 @@ export function Button({
       {loading ? (
         <ActivityIndicator color={palette.text} />
       ) : (
-        <Text style={[styles.label, { color: palette.text }]}>{label}</Text>
+        <>
+          <Text style={[styles.label, { color: palette.text }]}>{label}</Text>
+          {variant === 'primary' ? (
+            <Ionicons name="arrow-forward" size={21} color={palette.text} style={styles.arrow} />
+          ) : null}
+        </>
       )}
     </Pressable>
   );
@@ -83,7 +90,7 @@ const variants: Record<
 
 const styles = StyleSheet.create({
   base: {
-    minHeight: 48,
+    minHeight: 54,
     borderRadius: radius.md,
     borderWidth: 1,
     paddingHorizontal: spacing.lg,
@@ -91,5 +98,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   label: { ...typography.heading },
+  withArrow: { paddingHorizontal: spacing.xl + 24 },
+  arrow: { position: 'absolute', right: spacing.lg },
   inactive: { opacity: 0.55 },
 });

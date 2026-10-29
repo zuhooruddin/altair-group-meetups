@@ -1,6 +1,13 @@
 import { fireEvent, screen } from '@testing-library/react-native';
 import { MeetupListScreen } from '../src/features/meetups/screens/MeetupListScreen';
-import { MAPLE, fakeNavigation, fakeServices, renderWithServices, summary } from './helpers';
+import {
+  MAPLE,
+  detail,
+  fakeNavigation,
+  fakeServices,
+  renderWithServices,
+  summary,
+} from './helpers';
 
 const RIVERSIDE = 'b2000000-0000-4000-8000-000000000002';
 const groups = [
@@ -15,6 +22,21 @@ const renderList = (services: ReturnType<typeof fakeServices>, navigation = fake
   );
 
 describe('MeetupListScreen', () => {
+  it('shows RSVP attendees beside the count, not the meetup creator', async () => {
+    await renderList(
+      fakeServices({
+        groups: { listMine: async () => groups },
+        meetups: {
+          listForGroup: async () => [summary()],
+          get: async () => detail(),
+        },
+      }),
+    );
+    expect(await screen.findByLabelText('Jordan Price avatar')).toBeTruthy();
+    expect(screen.getByLabelText('Riley Chen avatar')).toBeTruthy();
+    expect(screen.queryByLabelText('Host Avery Lin avatar')).toBeNull();
+    expect(screen.queryByLabelText('Avery Lin avatar')).toBeNull();
+  });
   it('loads groups, picks the first, and lists its meetups including cancelled ones', async () => {
     const listForGroup = jest.fn(async () => [
       summary(),

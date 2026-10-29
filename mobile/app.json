@@ -5,7 +5,22 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
-    "backgroundColor": "#F7F5EF",
+    "backgroundColor": "#FAF8F1",
+    "plugins": [
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#FAF8F1",
+          "image": "./assets/splash-logo.png",
+          "imageWidth": 120,
+          "resizeMode": "contain",
+          "dark": {
+            "backgroundColor": "#FAF8F1",
+            "image": "./assets/splash-logo.png"
+          }
+        }
+      ]
+    ],
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": false,

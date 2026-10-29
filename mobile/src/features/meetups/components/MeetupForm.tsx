@@ -91,11 +91,23 @@ export function MeetupFormFields({ form, groups }: { form: MeetupFormState; grou
 
   return (
     <>
+      <View style={styles.intro}>
+        <Text style={styles.eyebrow}>BETTER WALKS, TOGETHER</Text>
+        <Text style={styles.introTitle}>Make a little time outside.</Text>
+        <Text style={styles.sectionHint}>
+          Pick a time and a public place to meet your neighbors.
+        </Text>
+      </View>
       {groups && groups.length > 1 ? (
         <View style={styles.field}>
           <Text style={styles.label}>Group</Text>
           <View style={styles.pickerBleed}>
-            <GroupPicker groups={groups} selectedId={values.groupId} onSelect={set.setGroupId} />
+            <GroupPicker
+              groups={groups}
+              selectedId={values.groupId}
+              onSelect={set.setGroupId}
+              compact
+            />
           </View>
           {errors.groupId ? <Text style={styles.error}>{errors.groupId}</Text> : null}
         </View>
@@ -125,6 +137,11 @@ export function MeetupFormFields({ form, groups }: { form: MeetupFormState; grou
           Choose a public place. Members who haven’t RSVP’d only see an approximate area until they
           do.
         </Text>
+        <LocationPicker
+          latitude={lat !== undefined && Number.isFinite(lat) ? lat : null}
+          longitude={lng !== undefined && Number.isFinite(lng) ? lng : null}
+          onPick={set.setPoint}
+        />
         <Pressable
           style={styles.quickFill}
           accessibilityRole="button"
@@ -144,11 +161,6 @@ export function MeetupFormFields({ form, groups }: { form: MeetupFormState; grou
           maxLength={PLACE_NAME_MAX + 20}
           error={errors.placeName}
           testID="place-input"
-        />
-        <LocationPicker
-          latitude={lat !== undefined && Number.isFinite(lat) ? lat : null}
-          longitude={lng !== undefined && Number.isFinite(lng) ? lng : null}
-          onPick={set.setPoint}
         />
         <View style={styles.coords}>
           <View style={styles.coord}>
@@ -180,6 +192,15 @@ export function MeetupFormFields({ form, groups }: { form: MeetupFormState; grou
 }
 
 const styles = StyleSheet.create({
+  intro: {
+    gap: spacing.sm,
+    paddingVertical: spacing.md,
+    paddingBottom: spacing.lg,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+  },
+  eyebrow: { fontSize: 10, fontWeight: '600', letterSpacing: 1.5, color: colors.primary },
+  introTitle: { ...typography.title, color: colors.text },
   field: { gap: spacing.xs },
   label: { ...typography.label, color: colors.text },
   pickerBleed: { marginHorizontal: -spacing.lg },
