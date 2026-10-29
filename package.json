@@ -15,6 +15,7 @@
     "db:push:dry": "node scripts/db-push.mjs --dry-run",
     "db:inspect": "npm run db:inspect --workspace @altair/server",
     "db:seed": "npm run db:seed --workspace @altair/server",
+    "demo:privacy": "npm run demo:privacy --workspace @altair/server",
     "db:reset-reference": "npm run db:reset-reference --workspace @altair/server",
     "live:simulate": "npm run live:simulate --workspace @altair/server --",
     "server": "npm run start --workspace @altair/server",
