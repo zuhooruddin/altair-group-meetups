@@ -50,6 +50,13 @@ export interface AttendeeRecord {
   rsvpAt: Date;
 }
 
+/** Bonus edit: only the fields being changed. */
+export interface MeetupChanges {
+  title?: string;
+  startsAt?: Date;
+  meetingPoint?: ExactPointRecord;
+}
+
 export interface NewMeetup {
   groupId: string;
   title: string;

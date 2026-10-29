@@ -1,6 +1,6 @@
 import type { MeetupDetail } from '@altair/shared';
 import { Ionicons } from '@expo/vector-icons';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Alert, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { messageFor } from '../../../core/api/api-error';
 import type { ScreenProps } from '../../../navigation/types';
@@ -18,15 +18,21 @@ import { useCancelMeetup, useMeetupDetail, useRsvp, useWithdrawRsvp } from '../h
 
 type Feedback = { tone: 'success' | 'error'; message: string } | null;
 
-export function MeetupDetailScreen({ route }: ScreenProps<'MeetupDetail'>) {
+const flashMessages = {
+  created: 'Meetup created. Your group can see it now.',
+  updated: 'Changes saved.',
+} as const;
+
+export function MeetupDetailScreen({ route, navigation }: ScreenProps<'MeetupDetail'>) {
   const { meetupId, flash } = route.params;
   const query = useMeetupDetail(meetupId);
   const currentUserId = useCurrentUserId();
-  const [feedback, setFeedback] = useState<Feedback>(
-    flash === 'created'
-      ? { tone: 'success', message: 'Meetup created. Your group can see it now.' }
-      : null,
-  );
+  const [feedback, setFeedback] = useState<Feedback>(null);
+
+  // Show a one-off confirmation when we arrive from create or edit.
+  useEffect(() => {
+    if (flash) setFeedback({ tone: 'success', message: flashMessages[flash] });
+  }, [flash]);
 
   if (query.isPending) return <LoadingState message="Loading meetup…" />;
   if (query.isError)
@@ -57,6 +63,14 @@ export function MeetupDetailScreen({ route }: ScreenProps<'MeetupDetail'>) {
         </Text>
         <AttendeeList attendees={query.data.attendees} currentUserId={currentUserId} />
       </Card>
+      {query.data.viewer.canEdit ? (
+        <Button
+          label="Edit meetup"
+          variant="secondary"
+          onPress={() => navigation.navigate('EditMeetup', { meetupId })}
+          testID="edit-button"
+        />
+      ) : null}
       {query.data.viewer.canCancel ? (
         <CancelSection meetup={query.data} onFeedback={setFeedback} />
       ) : null}

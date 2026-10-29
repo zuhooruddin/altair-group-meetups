@@ -26,29 +26,54 @@ export type MeetupStatus = z.infer<typeof meetupStatusSchema>;
  * The future-start rule is evaluated at parse time, so the app shows it
  * early and the server re-checks it authoritatively on every request.
  */
+const titleSchema = z
+  .string({ message: 'Title is required' })
+  .trim()
+  .min(1, 'Title is required')
+  .max(MEETUP_TITLE_MAX, `Title must be at most ${MEETUP_TITLE_MAX} characters`);
+
+const futureStartSchema = isoDateTimeSchema.refine((value) => Date.parse(value) > Date.now(), {
+  message: 'Start time must be in the future',
+});
+
+const meetingPointInputSchema = z.strictObject({
+  placeName: z
+    .string({ message: 'Meeting point name is required' })
+    .trim()
+    .min(1, 'Meeting point name is required')
+    .max(PLACE_NAME_MAX, `Meeting point name must be at most ${PLACE_NAME_MAX} characters`),
+  latitude: latitudeSchema,
+  longitude: longitudeSchema,
+});
+
 export const createMeetupRequestSchema = z.strictObject({
   groupId: uuidSchema,
-  title: z
-    .string({ message: 'Title is required' })
-    .trim()
-    .min(1, 'Title is required')
-    .max(MEETUP_TITLE_MAX, `Title must be at most ${MEETUP_TITLE_MAX} characters`),
-  startsAt: isoDateTimeSchema.refine((value) => Date.parse(value) > Date.now(), {
-    message: 'Start time must be in the future',
-  }),
-  meetingPoint: z.strictObject({
-    placeName: z
-      .string({ message: 'Meeting point name is required' })
-      .trim()
-      .min(1, 'Meeting point name is required')
-      .max(PLACE_NAME_MAX, `Meeting point name must be at most ${PLACE_NAME_MAX} characters`),
-    latitude: latitudeSchema,
-    longitude: longitudeSchema,
-  }),
+  title: titleSchema,
+  startsAt: futureStartSchema,
+  meetingPoint: meetingPointInputSchema,
 });
 export type CreateMeetupRequest = z.infer<typeof createMeetupRequestSchema>;
 /** What the form holds before parsing (title untrimmed, etc.). */
 export type CreateMeetupInput = z.input<typeof createMeetupRequestSchema>;
+
+/**
+ * PATCH /v1/meetups/:meetupId (bonus: creator-only edit).
+ *
+ * Send only what changes. A start time, when present, must be in the
+ * future; omit it to keep the current one. Strict: the group, the creator
+ * and the status cannot be changed through this request.
+ */
+export const updateMeetupRequestSchema = z
+  .strictObject({
+    title: titleSchema.optional(),
+    startsAt: futureStartSchema.optional(),
+    meetingPoint: meetingPointInputSchema.optional(),
+  })
+  .refine((body) => Object.values(body).some((v) => v !== undefined), {
+    message: 'Nothing to update: send a title, a start time or a meeting point',
+  });
+export type UpdateMeetupRequest = z.infer<typeof updateMeetupRequestSchema>;
+export type UpdateMeetupInput = z.input<typeof updateMeetupRequestSchema>;
 
 /** Path params for /v1/meetups/:meetupId[/...] (cancel, RSVP, withdraw, reads). */
 export const meetupIdParamsSchema = z.strictObject({ meetupId: uuidSchema });
@@ -74,6 +99,7 @@ export const meetupViewerSchema = z.object({
   isAttending: z.boolean(),
   canRsvp: z.boolean(),
   canCancel: z.boolean(),
+  canEdit: z.boolean(),
 });
 export type MeetupViewer = z.infer<typeof meetupViewerSchema>;
 

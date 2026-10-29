@@ -5,6 +5,7 @@ export const apiRoutes = {
   groupMeetups: (groupId: string) => `/v1/groups/${groupId}/meetups`,
   groupMap: (groupId: string) => `/v1/groups/${groupId}/map`,
   meetups: '/v1/meetups',
+  /** GET = detail, PATCH = creator-only edit (bonus). */
   meetup: (meetupId: string) => `/v1/meetups/${meetupId}`,
   meetupAttendees: (meetupId: string) => `/v1/meetups/${meetupId}/attendees`,
   meetupMap: (meetupId: string) => `/v1/meetups/${meetupId}/map`,

@@ -4,6 +4,7 @@ import {
   meetingPointViewSchema,
   meetupSummarySchema,
   meetupIdParamsSchema,
+  updateMeetupRequestSchema,
 } from '../src';
 
 const inOneHour = () => new Date(Date.now() + 60 * 60 * 1000).toISOString();
@@ -125,6 +126,49 @@ describe('createMeetupRequestSchema', () => {
   });
 });
 
+describe('updateMeetupRequestSchema (bonus edit)', () => {
+  it('accepts any single field and trims', () => {
+    expect(updateMeetupRequestSchema.parse({ title: '  New name ' })).toEqual({
+      title: 'New name',
+    });
+    expect(updateMeetupRequestSchema.safeParse({ startsAt: inOneHour() }).success).toBe(true);
+    expect(
+      updateMeetupRequestSchema.safeParse({
+        meetingPoint: { placeName: 'Fountain plaza', latitude: 39.999134, longitude: -99.999461 },
+      }).success,
+    ).toBe(true);
+  });
+
+  it('rejects an empty change set', () => {
+    expect(updateMeetupRequestSchema.safeParse({}).success).toBe(false);
+  });
+
+  it('re-checks the future-start rule when the start time changes', () => {
+    const past = new Date(Date.now() - 60_000).toISOString();
+    expect(updateMeetupRequestSchema.safeParse({ startsAt: past }).success).toBe(false);
+  });
+
+  it('rejects invalid titles and coordinates', () => {
+    expect(updateMeetupRequestSchema.safeParse({ title: ' ' }).success).toBe(false);
+    expect(updateMeetupRequestSchema.safeParse({ title: 'x'.repeat(81) }).success).toBe(false);
+    expect(
+      updateMeetupRequestSchema.safeParse({
+        meetingPoint: { placeName: 'x', latitude: 95, longitude: 0 },
+      }).success,
+    ).toBe(false);
+  });
+
+  it('never lets the client change group, creator or status', () => {
+    for (const extra of [
+      { groupId: 'b2000000-0000-4000-8000-000000000002' },
+      { createdBy: 'a1000000-0000-4000-8000-000000000007' },
+      { status: 'scheduled' },
+    ]) {
+      expect(updateMeetupRequestSchema.safeParse({ title: 'x', ...extra }).success).toBe(false);
+    }
+  });
+});
+
 describe('meetupIdParamsSchema', () => {
   it('requires a UUID', () => {
     expect(
@@ -178,7 +222,13 @@ describe('meetupSummarySchema', () => {
         home_lat: 40.0048,
       },
       attendeeCount: 2,
-      viewer: { isCreator: false, isAttending: false, canRsvp: true, canCancel: false },
+      viewer: {
+        isCreator: false,
+        isAttending: false,
+        canRsvp: true,
+        canCancel: false,
+        canEdit: false,
+      },
       meetingPoint: {
         visibility: 'approximate',
         label: 'x',

@@ -12,6 +12,7 @@ export function viewerFor(meetup: MeetupRecord, actor: Actor): MeetupViewer {
     isAttending: meetup.viewerIsAttending,
     canRsvp: isScheduled && !meetup.hasStarted && !meetup.viewerIsAttending,
     canCancel: isCreator && isScheduled,
+    canEdit: isCreator && isScheduled,
   };
 }
 

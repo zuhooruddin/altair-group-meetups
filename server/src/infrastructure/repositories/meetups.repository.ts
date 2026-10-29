@@ -1,6 +1,6 @@
 import type { MeetupStatus } from '@altair/shared';
 import type { MeetupRepository } from '../../domain/ports';
-import type { MeetupRecord, NewMeetup } from '../../domain/types';
+import type { MeetupChanges, MeetupRecord, NewMeetup } from '../../domain/types';
 import type { SqlClient } from '../db/sql-client';
 
 interface MeetupRow extends Record<string, unknown> {
@@ -122,5 +122,43 @@ export class PgMeetupRepository implements MeetupRepository {
       [meetupId],
     );
     return (rowCount ?? 0) > 0;
+  }
+
+  async update(meetupId: string, changes: MeetupChanges): Promise<boolean> {
+    // Only the columns being changed appear in SET (names are fixed here,
+    // values are parameters). RLS limits the row to the creator's own.
+    const sets: string[] = [];
+    const params: unknown[] = [meetupId];
+    if (changes.title !== undefined) {
+      params.push(changes.title);
+      sets.push(`title = $${params.length}`);
+    }
+    if (changes.startsAt !== undefined) {
+      params.push(changes.startsAt.toISOString());
+      sets.push(`starts_at = $${params.length}`);
+    }
+    if (sets.length > 0) {
+      const { rowCount } = await this.db.query(
+        `update public.meetups set ${sets.join(', ')} where id = $1`,
+        params,
+      );
+      if ((rowCount ?? 0) === 0) return false;
+    }
+    if (changes.meetingPoint) {
+      // A coordinate change makes the database recompute the approximate area.
+      const { rowCount } = await this.db.query(
+        `update public.meetup_meeting_points
+            set place_name = $2, latitude = $3, longitude = $4
+          where meetup_id = $1`,
+        [
+          meetupId,
+          changes.meetingPoint.placeName,
+          changes.meetingPoint.latitude,
+          changes.meetingPoint.longitude,
+        ],
+      );
+      if ((rowCount ?? 0) === 0) return false;
+    }
+    return true;
   }
 }

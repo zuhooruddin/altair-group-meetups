@@ -2,7 +2,7 @@ import { apiErrorBodySchema } from '@altair/shared';
 import type { z } from 'zod';
 import { ApiError } from './api-error';
 
-type Method = 'GET' | 'POST' | 'PUT' | 'DELETE';
+type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
 /**
  * Thin HTTP client for the ALTAIR API. Attaches the member's access token

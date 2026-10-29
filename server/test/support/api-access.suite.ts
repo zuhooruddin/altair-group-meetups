@@ -19,7 +19,7 @@ import {
 import type { ApiHarness } from './harness';
 import { distanceMeters, expectNoExactPoint, expectNoHomeLocation } from './leaks';
 
-type Method = 'GET' | 'POST' | 'PUT' | 'DELETE';
+type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
 export function describeApiAccess(environment: string, createHarness: () => Promise<ApiHarness>) {
   describe(`API access rules (${environment})`, () => {
@@ -552,6 +552,88 @@ export function describeApiAccess(environment: string, createHarness: () => Prom
         });
         expect(res.status).toBe(400);
         expect((await detail('jordan', meetups.weeknightWalk)).body.meetup.attendeeCount).toBe(0);
+      });
+    });
+
+    // -----------------------------------------------------------------
+    describe('bonus: creator-only edit (PATCH /v1/meetups/:id)', () => {
+      const newPoint = {
+        placeName: 'Front steps, Elm Avenue Library',
+        latitude: 40.003318,
+        longitude: -99.979762,
+      };
+
+      it('creator edits title, start time and meeting point; members see the new area only', async () => {
+        const created = await createAs('avery');
+        const startsAt = inDays(5);
+        const res = await call('avery', 'PATCH', `/v1/meetups/${created.id}`, {
+          title: `  ${TEST_TITLE_PREFIX} Renamed walk `,
+          startsAt,
+          meetingPoint: newPoint,
+        });
+        expect(res.status).toBe(200);
+        const m = res.body.meetup as MeetupDetail;
+        expect(m.title).toBe(`${TEST_TITLE_PREFIX} Renamed walk`);
+        expect(Date.parse(m.startsAt)).toBe(Date.parse(startsAt));
+        expect(m.meetingPoint).toEqual({ visibility: 'exact', ...newPoint });
+        expect(m.viewer.canEdit).toBe(true);
+
+        const asSam = await detail('sam', created.id);
+        const area = asSam.body.meetup.meetingPoint;
+        expect(area.visibility).toBe('approximate');
+        expectNoExactPoint(asSam.body, newPoint);
+        expectNoExactPoint(asSam.body, SPARE_POINT);
+        const d = distanceMeters(
+          { latitude: area.centerLatitude, longitude: area.centerLongitude },
+          newPoint,
+        );
+        expect(d).toBeGreaterThanOrEqual(100);
+        expect(d).toBeLessThan(area.radiusMeters);
+        expect(asSam.body.meetup.viewer.canEdit).toBe(false);
+      });
+
+      it('other members get 403 and outsiders 404; nothing changes', async () => {
+        const created = await createAs('avery');
+        const jordan = await call('jordan', 'PATCH', `/v1/meetups/${created.id}`, { title: 'x' });
+        expect(jordan.status).toBe(403);
+        const taylor = await call('taylor', 'PATCH', `/v1/meetups/${created.id}`, { title: 'x' });
+        expect(taylor.status).toBe(404);
+        expect(taylor.body).toEqual({ error: { code: 'NOT_FOUND', message: 'Meetup not found' } });
+        expect((await detail('avery', created.id)).body.meetup.title).toBe(created.title);
+      });
+
+      it('a cancelled meetup cannot be edited', async () => {
+        const created = await createAs('avery');
+        await call('avery', 'POST', `/v1/meetups/${created.id}/cancel`);
+        const res = await call('avery', 'PATCH', `/v1/meetups/${created.id}`, { title: 'x' });
+        expect(res.status).toBe(409);
+        expect(res.body.error.code).toBe('MEETUP_CANCELLED');
+      });
+
+      it.each([
+        ['an empty change set', {}],
+        ['an empty title', { title: '  ' }],
+        ['an 81-char title', { title: 'a'.repeat(81) }],
+        ['a past start time', { startsAt: new Date(Date.now() - 60_000).toISOString() }],
+        ['the current time', { startsAt: new Date().toISOString() }],
+        ['bad coordinates', { meetingPoint: { ...newPoint, latitude: -91 } }],
+        ['a group change', { title: 'x', groupId: groups.riverside }],
+        ['a creator change', { title: 'x', createdBy: users.sam }],
+        ['a status change', { status: 'scheduled' }],
+      ])('rejects %s with 400', async (_label, body) => {
+        const created = await createAs('avery');
+        const res = await call('avery', 'PATCH', `/v1/meetups/${created.id}`, body);
+        expect(res.status).toBe(400);
+        expect(res.body.error.code).toBe('VALIDATION_FAILED');
+      });
+
+      it('editing only the title keeps a start time that is already set', async () => {
+        const created = await createAs('avery', { startsAt: inDays(4) });
+        const res = await call('avery', 'PATCH', `/v1/meetups/${created.id}`, {
+          title: `${TEST_TITLE_PREFIX} title only`,
+        });
+        expect(res.status).toBe(200);
+        expect(res.body.meetup.startsAt).toBe(created.startsAt);
       });
     });
 

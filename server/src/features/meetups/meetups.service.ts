@@ -5,6 +5,7 @@ import type {
   ListMeetupsResponse,
   MeetupDetail,
   MeetupMapResponse,
+  UpdateMeetupRequest,
 } from '@altair/shared';
 import { AppError, notFound } from '../../domain/errors';
 import type { UnitOfWork } from '../../domain/ports';
@@ -63,6 +64,35 @@ export class MeetupsService {
         longitude: input.meetingPoint.longitude,
       });
       return loadMeetupDetail(repos, actor, id);
+    });
+  }
+
+  /**
+   * Bonus: creator-only edit. `input` has already passed
+   * updateMeetupRequestSchema (a new start time is in the future). The
+   * database re-checks creator-only (RLS), the future start, and that the
+   * meetup is not cancelled, and recomputes the approximate area if the
+   * coordinates moved.
+   */
+  update(actor: Actor, meetupId: string, input: UpdateMeetupRequest): Promise<MeetupDetail> {
+    return this.uow.write(actor, async (repos) => {
+      const meetup = await repos.meetups.findVisible(meetupId);
+      if (!meetup) throw notFound('Meetup');
+      if (meetup.creatorId !== actor.userId) {
+        throw new AppError('FORBIDDEN', 'Only the member who created this meetup can edit it');
+      }
+      if (meetup.status === 'cancelled') {
+        throw new AppError('MEETUP_CANCELLED', 'A cancelled meetup can’t be edited');
+      }
+      const changed = await repos.meetups.update(meetupId, {
+        ...(input.title !== undefined ? { title: input.title } : {}),
+        ...(input.startsAt !== undefined ? { startsAt: new Date(input.startsAt) } : {}),
+        ...(input.meetingPoint ? { meetingPoint: input.meetingPoint } : {}),
+      });
+      if (!changed) {
+        throw new AppError('FORBIDDEN', 'Only the member who created this meetup can edit it');
+      }
+      return loadMeetupDetail(repos, actor, meetupId);
     });
   }
 

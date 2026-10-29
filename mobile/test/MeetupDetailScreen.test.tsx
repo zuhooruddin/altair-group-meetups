@@ -41,7 +41,13 @@ describe('MeetupDetailScreen', () => {
       detail({
         meetingPoint: points.exact,
         attendeeCount: 3,
-        viewer: { isCreator: false, isAttending: true, canRsvp: false, canCancel: false },
+        viewer: {
+          isCreator: false,
+          isAttending: true,
+          canRsvp: false,
+          canCancel: false,
+          canEdit: false,
+        },
         attendees: [
           ...detail().attendees,
           { userId: SAM, displayName: 'Sam Okafor', rsvpAt: '2026-10-29T11:00:00.000Z' },
@@ -65,7 +71,13 @@ describe('MeetupDetailScreen', () => {
     const alert = jest.spyOn(Alert, 'alert').mockImplementation(() => undefined);
     const creatorView = detail({
       meetingPoint: points.exact,
-      viewer: { isCreator: true, isAttending: false, canRsvp: true, canCancel: true },
+      viewer: {
+        isCreator: true,
+        isAttending: false,
+        canRsvp: true,
+        canCancel: true,
+        canEdit: true,
+      },
     });
     await renderDetail(fakeServices({ meetups: { get: async () => creatorView } }, AVERY));
     await fireEvent.press(await screen.findByTestId('cancel-button'));
@@ -86,7 +98,13 @@ describe('MeetupDetailScreen', () => {
             detail({
               status: 'cancelled',
               cancelledAt: '2026-10-29T12:00:00.000Z',
-              viewer: { isCreator: false, isAttending: false, canRsvp: false, canCancel: false },
+              viewer: {
+                isCreator: false,
+                isAttending: false,
+                canRsvp: false,
+                canCancel: false,
+                canEdit: false,
+              },
             }),
         },
       }),

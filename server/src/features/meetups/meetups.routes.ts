@@ -8,6 +8,7 @@ import {
   meetupDetailResponseSchema,
   meetupIdParamsSchema,
   meetupMapResponseSchema,
+  updateMeetupRequestSchema,
 } from '@altair/shared';
 import type { FastifyPluginAsync } from 'fastify';
 import { actorOf } from '../../http/auth';
@@ -61,6 +62,16 @@ export function meetupsRoutes(service: MeetupsService): FastifyPluginAsync {
       const input = parseInput(createMeetupRequestSchema, request.body, 'meetup');
       const meetup = await service.create(actor, input);
       return reply.status(201).send(toResponse(meetupDetailResponseSchema, { meetup }));
+    });
+
+    // Bonus: creator-only edit.
+    app.patch('/meetups/:meetupId', async (request) => {
+      const actor = actorOf(request);
+      const { meetupId } = parseInput(meetupIdParamsSchema, request.params, 'path parameters');
+      const input = parseInput(updateMeetupRequestSchema, request.body, 'meetup changes');
+      return toResponse(meetupDetailResponseSchema, {
+        meetup: await service.update(actor, meetupId, input),
+      });
     });
 
     app.post('/meetups/:meetupId/cancel', async (request) => {

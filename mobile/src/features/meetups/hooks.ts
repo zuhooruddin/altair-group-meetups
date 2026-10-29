@@ -1,4 +1,4 @@
-import type { CreateMeetupRequest, MeetupDetail } from '@altair/shared';
+import type { CreateMeetupRequest, MeetupDetail, UpdateMeetupRequest } from '@altair/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useServices } from '../../core/services';
 import { queryKeys } from '../query-keys';
@@ -44,6 +44,15 @@ export function useCancelMeetup(meetupId: string) {
   const { meetups } = useServices();
   const apply = useApplyMeetupDetail();
   return useMutation({ mutationFn: () => meetups.cancel(meetupId), onSuccess: apply });
+}
+
+export function useUpdateMeetup(meetupId: string) {
+  const { meetups } = useServices();
+  const apply = useApplyMeetupDetail();
+  return useMutation({
+    mutationFn: (changes: UpdateMeetupRequest) => meetups.update(meetupId, changes),
+    onSuccess: apply,
+  });
 }
 
 export function useRsvp(meetupId: string) {

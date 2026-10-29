@@ -36,6 +36,7 @@ export function fakeServices(
       get: reject,
       create: reject,
       cancel: reject,
+      update: reject,
       rsvp: reject,
       withdraw: reject,
       ...overrides.meetups,
@@ -102,7 +103,13 @@ export function summary(overrides: Partial<MeetupSummary> = {}): MeetupSummary {
     cancelledAt: null,
     creator: { id: AVERY, displayName: 'Avery Lin' },
     attendeeCount: 2,
-    viewer: { isCreator: false, isAttending: false, canRsvp: true, canCancel: false },
+    viewer: {
+      isCreator: false,
+      isAttending: false,
+      canRsvp: true,
+      canCancel: false,
+      canEdit: false,
+    },
     meetingPoint: approximate,
     ...overrides,
   };

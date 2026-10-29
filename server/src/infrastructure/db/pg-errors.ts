@@ -18,8 +18,12 @@ export function translateDatabaseError(error: unknown): unknown {
     case 'AL001':
       return notFound('Meetup');
     case 'AL002':
-    case 'AL004':
       return meetupCancelled();
+    case 'AL004':
+      return new AppError(
+        'MEETUP_CANCELLED',
+        'This meetup has been cancelled and can’t be changed',
+      );
     case 'AL003':
       return meetupStarted();
     case 'AL006':

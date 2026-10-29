@@ -299,11 +299,14 @@ describe('writer role still enforces the member rules (RLS)', () => {
     expect(result.affected).toBe(1);
   });
 
-  it('writer cannot change the title or creator (column grants)', async () => {
+  // Title/start time became writable for the creator with the edit bonus
+  // (see "bonus: editing a meetup"); creator and group never are.
+  it('writer cannot change the creator or the group (column grants)', async () => {
     expect(
       (
-        await asWriter('avery', `update public.meetups set title = 'x' where id = $1`, [
+        await asWriter('avery', `update public.meetups set group_id = $2 where id = $1`, [
           meetups.saturdayLoop,
+          groups.riverside,
         ])
       ).error,
     ).toBe('42501');
@@ -450,5 +453,92 @@ describe('domain rules hold even for the database owner', () => {
     ).rejects.toMatchObject({
       code: 'AL005',
     });
+  });
+});
+
+describe('bonus: editing a meetup', () => {
+  const setTitle = `update public.meetups set title = '[test] renamed' where id = $1`;
+  const movePoint = `update public.meetup_meeting_points
+                        set place_name = 'Fountain plaza, Town Green', latitude = 39.999134, longitude = -99.999461
+                      where meetup_id = $1`;
+
+  it('creator can change title, start time and meeting point', async () => {
+    expect((await asWriter('avery', setTitle, [meetups.saturdayLoop])).affected).toBe(1);
+    const start = await asWriter(
+      'avery',
+      `update public.meetups set starts_at = now() + interval '3 days' where id = $1`,
+      [meetups.saturdayLoop],
+    );
+    expect(start.error).toBeUndefined();
+    expect(start.affected).toBe(1);
+    expect((await asWriter('avery', movePoint, [meetups.saturdayLoop])).affected).toBe(1);
+  });
+
+  it('other members and outsiders change nothing (RLS: 0 rows)', async () => {
+    for (const persona of ['jordan', 'riley', 'sam', 'taylor', 'quinn'] as const) {
+      expect((await asWriter(persona, setTitle, [meetups.saturdayLoop])).affected, persona).toBe(0);
+      expect((await asWriter(persona, movePoint, [meetups.saturdayLoop])).affected, persona).toBe(
+        0,
+      );
+    }
+  });
+
+  it('a changed start time must be in the future', async () => {
+    const result = await asWriter(
+      'avery',
+      `update public.meetups set starts_at = now() - interval '1 hour' where id = $1`,
+      [meetups.saturdayLoop],
+    );
+    expect(result.error).toBe('AL006');
+  });
+
+  it('a cancelled meetup cannot be edited (title or meeting point)', async () => {
+    await db.query(`update public.meetups set status = 'cancelled' where id = $1`, [
+      meetups.saturdayLoop,
+    ]);
+    expect((await asWriter('avery', setTitle, [meetups.saturdayLoop])).error).toBe('AL004');
+    expect((await asWriter('avery', movePoint, [meetups.saturdayLoop])).error).toBe('AL004');
+  });
+
+  it('group, creator and area cannot be changed by a member write', async () => {
+    for (const sql of [
+      `update public.meetups set group_id = '${groups.riverside}' where id = $1`,
+      `update public.meetups set created_by = '${users.sam}' where id = $1`,
+      `update public.meetups set area_center_lat = 40.012046 where id = $1`,
+    ]) {
+      expect((await asWriter('avery', sql, [meetups.saturdayLoop])).error, sql).toBe('42501');
+    }
+  });
+
+  it('the client-facing role cannot edit directly', async () => {
+    expect((await asMember('avery', setTitle, [meetups.saturdayLoop])).error).toBe('42501');
+    expect((await asMember('avery', movePoint, [meetups.saturdayLoop])).error).toBe('42501');
+  });
+
+  it('moving the meeting point recomputes the approximate area around the new spot', async () => {
+    const area = async () =>
+      (
+        await db.query<{ lat: number; lng: number; r: number }>(
+          `select area_center_lat as lat, area_center_lng as lng, area_radius_m as r
+             from public.meetups where id = $1`,
+          [meetups.saturdayLoop],
+        )
+      ).rows[0]!;
+    const before = await area();
+    await db.transaction(async (tx) => {
+      await tx.query(`set local role altair_api_writer`);
+      await tx.query(`select set_config('request.jwt.claims', $1, true)`, [
+        JSON.stringify({ sub: users.avery }),
+      ]);
+      await tx.query(movePoint, [meetups.saturdayLoop]);
+    });
+    const after = await area();
+    expect(after).not.toEqual(before);
+    const d = distanceMeters(
+      { latitude: after.lat, longitude: after.lng },
+      { latitude: 39.999134, longitude: -99.999461 },
+    );
+    expect(d).toBeGreaterThanOrEqual(119);
+    expect(d).toBeLessThan(after.r);
   });
 });

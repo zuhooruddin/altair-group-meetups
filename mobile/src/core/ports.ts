@@ -1,4 +1,10 @@
-import type { CreateMeetupRequest, Group, MeetupDetail, MeetupSummary } from '@altair/shared';
+import type {
+  CreateMeetupRequest,
+  Group,
+  MeetupDetail,
+  MeetupSummary,
+  UpdateMeetupRequest,
+} from '@altair/shared';
 
 /**
  * What the app's features depend on. Screens and hooks never see Supabase
@@ -29,6 +35,8 @@ export interface MeetupsGateway {
   get(meetupId: string): Promise<MeetupDetail>;
   create(input: CreateMeetupRequest): Promise<MeetupDetail>;
   cancel(meetupId: string): Promise<MeetupDetail>;
+  /** Bonus: creator-only edit. */
+  update(meetupId: string, changes: UpdateMeetupRequest): Promise<MeetupDetail>;
   rsvp(meetupId: string): Promise<MeetupDetail>;
   withdraw(meetupId: string): Promise<MeetupDetail>;
 }

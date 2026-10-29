@@ -17,8 +17,11 @@ export function createGroupsGateway(api: ApiClient): GroupsGateway {
 }
 
 export function createMeetupsGateway(api: ApiClient): MeetupsGateway {
-  const detail = async (method: 'GET' | 'POST' | 'PUT' | 'DELETE', path: string, body?: unknown) =>
-    (await api.request(method, path, meetupDetailResponseSchema, body)).meetup;
+  const detail = async (
+    method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE',
+    path: string,
+    body?: unknown,
+  ) => (await api.request(method, path, meetupDetailResponseSchema, body)).meetup;
 
   return {
     listForGroup: async (groupId) =>
@@ -27,6 +30,7 @@ export function createMeetupsGateway(api: ApiClient): MeetupsGateway {
     get: (meetupId) => detail('GET', apiRoutes.meetup(meetupId)),
     create: (input: CreateMeetupRequest) => detail('POST', apiRoutes.meetups, input),
     cancel: (meetupId) => detail('POST', apiRoutes.cancelMeetup(meetupId)),
+    update: (meetupId, changes) => detail('PATCH', apiRoutes.meetup(meetupId), changes),
     rsvp: (meetupId) => detail('PUT', apiRoutes.rsvp(meetupId)),
     withdraw: (meetupId) => detail('DELETE', apiRoutes.rsvp(meetupId)),
   };

@@ -28,7 +28,16 @@ describe('viewerFor', () => {
       isAttending: false,
       canRsvp: true,
       canCancel: false,
+      canEdit: false,
     });
+  });
+
+  it('creator can edit while scheduled, not once cancelled; members never', () => {
+    expect(viewerFor(base, creator).canEdit).toBe(true);
+    expect(viewerFor(base, member).canEdit).toBe(false);
+    expect(
+      viewerFor({ ...base, status: 'cancelled', cancelledAt: new Date() }, creator).canEdit,
+    ).toBe(false);
   });
 
   it('creator can cancel while scheduled, not once cancelled', () => {

@@ -1,4 +1,11 @@
-import type { Actor, AttendeeRecord, GroupRecord, MeetupRecord, NewMeetup } from './types';
+import type {
+  Actor,
+  AttendeeRecord,
+  GroupRecord,
+  MeetupChanges,
+  MeetupRecord,
+  NewMeetup,
+} from './types';
 
 /**
  * Data-access ports. Implementations run every query AS the member (their
@@ -21,6 +28,8 @@ export interface MeetupRepository {
   create(input: NewMeetup): Promise<string>;
   /** Cancels if the caller is the creator and it is still scheduled. True if a row changed. */
   cancel(meetupId: string): Promise<boolean>;
+  /** Bonus edit, as the caller (RLS: creator only). True if the caller could change it. */
+  update(meetupId: string, changes: MeetupChanges): Promise<boolean>;
 }
 
 export interface RsvpRepository {

@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { useAuth } from '../features/auth/AuthProvider';
 import { SignInScreen } from '../features/auth/SignInScreen';
 import { CreateMeetupScreen } from '../features/meetups/screens/CreateMeetupScreen';
+import { EditMeetupScreen } from '../features/meetups/screens/EditMeetupScreen';
 import { MeetupDetailScreen } from '../features/meetups/screens/MeetupDetailScreen';
 import { MeetupListScreen } from '../features/meetups/screens/MeetupListScreen';
 import { LoadingState } from '../ui/StateViews';
@@ -55,6 +56,11 @@ export function RootNavigator() {
               name="CreateMeetup"
               component={CreateMeetupScreen}
               options={{ title: 'New meetup', presentation: 'modal' }}
+            />
+            <Stack.Screen
+              name="EditMeetup"
+              component={EditMeetupScreen}
+              options={{ title: 'Edit meetup', presentation: 'modal' }}
             />
           </>
         )}
