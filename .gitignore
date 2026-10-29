@@ -1,0 +1,33 @@
+# dependencies
+node_modules/
+
+# local toolchain (portable Node etc.)
+.tools/
+
+# secrets / local env
+.env
+.env.*
+!.env.example
+mobile/.env
+!mobile/.env.example
+
+# build output
+dist/
+coverage/
+*.tsbuildinfo
+
+# expo / react native
+mobile/.expo/
+mobile/android/
+mobile/ios/
+mobile/web-build/
+.expo/
+
+# supabase CLI local state
+supabase/.temp/
+supabase/.branches/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.log
