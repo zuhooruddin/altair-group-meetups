@@ -109,9 +109,13 @@ The starter is the **first migration**, so it is applied by the Supabase CLI tog
 Do **not** also paste it into the SQL editor.
 
 ```bash
-npm run db:push -- --dry-run   # shows the 5 migrations that would be applied
-npm run db:push                # = npx supabase db push --db-url $DATABASE_URL
+npm run db:inspect    # read-only: Postgres version, existing tables, applied migrations
+npm run db:push:dry   # shows the 6 migrations that would be applied; changes nothing
+npm run db:push       # = npx supabase db push --db-url $DATABASE_URL
 ```
+
+> **Windows PowerShell:** use `db:push:dry`, not `npm run db:push -- --dry-run`. PowerShell strips
+> a bare `--`, so `--dry-run` reaches npm instead of the script and the push really runs.
 
 Then, in the Supabase dashboard → **SQL Editor** (runs as the database owner, which the seed needs):
 

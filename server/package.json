@@ -12,7 +12,9 @@
     "test:offline": "vitest run --project unit --project offline",
     "test:hosted": "vitest run --project hosted",
     "db:reset-reference": "tsx scripts/reset-reference-meetups.ts",
-    "live:simulate": "tsx scripts/simulate-live-walk.ts"
+    "live:simulate": "tsx scripts/simulate-live-walk.ts",
+    "db:inspect": "tsx scripts/inspect-db.ts",
+    "db:seed": "tsx scripts/seed.ts"
   },
   "dependencies": {
     "@altair/shared": "*",
