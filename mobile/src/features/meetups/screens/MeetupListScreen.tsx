@@ -115,6 +115,9 @@ export function MeetupListScreen({ navigation }: ScreenProps<'Meetups'>) {
         </View>
       </View>
       <Text style={styles.groupsTitle}>Your groups</Text>
+      <Text style={styles.groupsSubtitle}>
+        Choose a group to see upcoming meetups and connect with fellow walkers.
+      </Text>
       <GroupPicker
         groups={groupsQuery.data}
         selectedId={selectedGroupId}
@@ -123,8 +126,8 @@ export function MeetupListScreen({ navigation }: ScreenProps<'Meetups'>) {
       <View style={styles.sectionHeading}>
         <Text style={styles.sectionLabel}>Upcoming meetups</Text>
         <View style={styles.sortLabel}>
-          <Text style={styles.sortText}>Soonest first</Text>
           <Ionicons name="swap-vertical" size={14} color={colors.primary} />
+          <Text style={styles.sortText}>Soonest first</Text>
         </View>
       </View>
       <View style={styles.body}>{renderBody()}</View>
@@ -167,7 +170,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  groupsTitle: { ...typography.heading, color: colors.text, paddingHorizontal: spacing.lg },
+  groupsTitle: {
+    ...typography.display,
+    fontSize: 27,
+    color: '#102F27',
+    paddingHorizontal: spacing.lg,
+  },
+  groupsSubtitle: {
+    ...typography.body,
+    fontSize: 14,
+    lineHeight: 21,
+    color: '#53625A',
+    paddingHorizontal: spacing.lg,
+    marginTop: spacing.sm,
+    marginBottom: spacing.md,
+  },
   sectionLabel: {
     ...typography.heading,
     color: colors.text,
@@ -182,8 +199,17 @@ const styles = StyleSheet.create({
     paddingTop: spacing.lg,
     paddingBottom: spacing.sm,
   },
-  sortLabel: { flexDirection: 'row', alignItems: 'center', gap: spacing.xs },
-  sortText: { ...typography.caption, color: colors.textMuted },
+  sortLabel: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    borderWidth: 1,
+    borderColor: '#D3E4D7',
+    borderRadius: 24,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  sortText: { ...typography.caption, color: colors.primary, fontWeight: '500' },
   body: { flex: 1 },
   list: { paddingHorizontal: spacing.sm, paddingBottom: spacing.md },
   emptyContainer: { flexGrow: 1 },
