@@ -85,9 +85,12 @@ export function SignInScreen() {
               </View>
               <View style={[styles.brandCopy, compact && styles.brandCopyCompact]}>
                 <Text style={[styles.appName, compact && styles.appNameCompact]}>Altair</Text>
-                <Text style={[styles.tagline, compact && styles.taglineCompact]}>
-                  Discover walks.{'\n'}Connect with neighbors.
-                </Text>
+                {/* A solid panel keeps the tagline readable over any part of the photo. */}
+                <View style={[styles.taglinePanel, compact && styles.taglinePanelCompact]}>
+                  <Text style={[styles.tagline, compact && styles.taglineCompact]}>
+                    Discover walks.{'\n'}Connect with neighbors.
+                  </Text>
+                </View>
               </View>
             </View>
           </ImageBackground>
@@ -254,16 +257,27 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   appName: { ...typography.display, fontSize: 44, letterSpacing: -1.5, color: colors.primary },
+  taglinePanel: {
+    marginTop: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.sm,
+    borderRadius: radius.md,
+    backgroundColor: 'rgba(250,248,241,0.92)',
+    borderWidth: 1,
+    borderColor: 'rgba(0,91,67,0.14)',
+  },
+  taglinePanelCompact: {
+    marginTop: 2,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: radius.sm,
+  },
   tagline: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
     color: '#003C2B',
     textAlign: 'center',
     lineHeight: 23,
-    marginTop: spacing.xs,
-    textShadowColor: 'rgba(250,248,241,0.95)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 6,
   },
   form: { gap: spacing.lg },
   dev: {
