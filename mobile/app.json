@@ -1,0 +1,19 @@
+{
+  "expo": {
+    "name": "Altair Meetups",
+    "slug": "altair-meetups",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#F7F5EF",
+    "newArchEnabled": true,
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "test.example.altair.meetups"
+    },
+    "android": {
+      "package": "test.example.altair.meetups",
+      "edgeToEdgeEnabled": true
+    }
+  }
+}
