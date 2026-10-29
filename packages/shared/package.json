@@ -2,6 +2,7 @@
   "name": "@altair/shared",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "description": "The one shared contract: Zod request/response schemas imported by the API server and the React Native app.",
   "main": "src/index.ts",
   "types": "src/index.ts",
