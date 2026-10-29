@@ -4,7 +4,8 @@ import { buildApp } from '../../src/http/app';
 import { translateDatabaseError } from '../../src/infrastructure/db/pg-errors';
 
 const verifier: TokenVerifier = {
-  verify: async (token) => (token === 'good' ? { userId: 'a1000000-0000-4000-8000-000000000003' } : null),
+  verify: async (token) =>
+    token === 'good' ? { userId: 'a1000000-0000-4000-8000-000000000003' } : null,
 };
 
 /** A unit of work whose repositories throw whatever the test wants. */
@@ -23,17 +24,26 @@ function failingUow(error: unknown): UnitOfWork {
   return { read: run, write: run };
 }
 
-const dbError = (code: string, message = 'db says no') => Object.assign(new Error(message), { code });
+const dbError = (code: string, message = 'db says no') =>
+  Object.assign(new Error(message), { code });
 
 describe('error boundary', () => {
   it('turns an unexpected database error into a generic 500 with no internals', async () => {
     const app = buildApp({
-      uow: failingUow(dbError('XX000', 'relation "public.meetup_meeting_points" ... North gate 40.012046')),
+      uow: failingUow(
+        dbError('XX000', 'relation "public.meetup_meeting_points" ... North gate 40.012046'),
+      ),
       tokenVerifier: verifier,
     });
-    const res = await app.inject({ method: 'GET', url: '/v1/me/groups', headers: { authorization: 'Bearer good' } });
+    const res = await app.inject({
+      method: 'GET',
+      url: '/v1/me/groups',
+      headers: { authorization: 'Bearer good' },
+    });
     expect(res.statusCode).toBe(500);
-    expect(JSON.parse(res.body)).toEqual({ error: { code: 'INTERNAL', message: 'Something went wrong' } });
+    expect(JSON.parse(res.body)).toEqual({
+      error: { code: 'INTERNAL', message: 'Something went wrong' },
+    });
     expect(res.body).not.toMatch(/relation|North gate|40\.012046/);
   });
 
@@ -47,7 +57,11 @@ describe('error boundary', () => {
     ['23514', 400, 'VALIDATION_FAILED'],
   ])('maps SQLSTATE %s to %i %s', async (sqlstate, status, code) => {
     const app = buildApp({ uow: failingUow(dbError(sqlstate)), tokenVerifier: verifier });
-    const res = await app.inject({ method: 'GET', url: '/v1/me/groups', headers: { authorization: 'Bearer good' } });
+    const res = await app.inject({
+      method: 'GET',
+      url: '/v1/me/groups',
+      headers: { authorization: 'Bearer good' },
+    });
     expect(res.statusCode).toBe(status);
     expect(JSON.parse(res.body).error.code).toBe(code);
     expect(res.body).not.toContain('db says no');

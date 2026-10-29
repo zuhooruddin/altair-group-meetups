@@ -3,7 +3,13 @@ import type { AppServices } from './ports';
 
 const ServicesContext = createContext<AppServices | null>(null);
 
-export function ServicesProvider({ services, children }: { services: AppServices; children: ReactNode }) {
+export function ServicesProvider({
+  services,
+  children,
+}: {
+  services: AppServices;
+  children: ReactNode;
+}) {
   return <ServicesContext.Provider value={services}>{children}</ServicesContext.Provider>;
 }
 

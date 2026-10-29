@@ -20,4 +20,9 @@ export const readSql = (path: string) => readFileSync(path, 'utf8');
 export const providedSeedPath = join(repoRoot, 'altair-seed-data.sql');
 
 /** Our adapted, idempotent PART 2. */
-export const referenceMeetupsSeedPath = join(repoRoot, 'supabase', 'seed', 'part2_reference_meetups.sql');
+export const referenceMeetupsSeedPath = join(
+  repoRoot,
+  'supabase',
+  'seed',
+  'part2_reference_meetups.sql',
+);

@@ -5,7 +5,15 @@
  */
 import pg from 'pg';
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { emails, exactPoints, FIXTURE_PASSWORD, groups, meetups, TEST_TITLE_PREFIX, users } from '../support/fixtures';
+import {
+  emails,
+  exactPoints,
+  FIXTURE_PASSWORD,
+  groups,
+  meetups,
+  TEST_TITLE_PREFIX,
+  users,
+} from '../support/fixtures';
 import { anonClient, clientAs, hostedEnv } from '../support/hosted-env';
 import { expectNoHomeLocation } from '../support/leaks';
 import { readSql, referenceMeetupsSeedPath } from '../support/paths';
@@ -29,17 +37,26 @@ beforeEach(async () => {
 
 describe('Supabase Auth with the seed accounts', () => {
   it('signs in with the fixture password', async () => {
-    const { data, error } = await anonClient().auth.signInWithPassword({ email: emails.sam, password: FIXTURE_PASSWORD });
+    const { data, error } = await anonClient().auth.signInWithPassword({
+      email: emails.sam,
+      password: FIXTURE_PASSWORD,
+    });
     expect(error).toBeNull();
     expect(data.session?.access_token).toEqual(expect.any(String));
     expect(data.user?.id).toBe(users.sam);
   });
 
   it('rejects a wrong password and an unknown account', async () => {
-    const wrong = await anonClient().auth.signInWithPassword({ email: emails.sam, password: 'not-the-password' });
+    const wrong = await anonClient().auth.signInWithPassword({
+      email: emails.sam,
+      password: 'not-the-password',
+    });
     expect(wrong.error).not.toBeNull();
     expect(wrong.data.session).toBeNull();
-    const unknown = await anonClient().auth.signInWithPassword({ email: 'nobody@example.test', password: FIXTURE_PASSWORD });
+    const unknown = await anonClient().auth.signInWithPassword({
+      email: 'nobody@example.test',
+      password: FIXTURE_PASSWORD,
+    });
     expect(unknown.error).not.toBeNull();
   });
 });
@@ -47,7 +64,13 @@ describe('Supabase Auth with the seed accounts', () => {
 describe('direct Data API reads are bound by RLS', () => {
   it('outsider reads nothing: meetups, attendees, meeting points, groups', async () => {
     const taylor = await clientAs('taylor');
-    for (const table of ['meetups', 'rsvps', 'meetup_meeting_points', 'groups', 'group_memberships']) {
+    for (const table of [
+      'meetups',
+      'rsvps',
+      'meetup_meeting_points',
+      'groups',
+      'group_memberships',
+    ]) {
       const { data, error } = await taylor.from(table).select('*');
       expect(error, table).toBeNull();
       expect(data, table).toEqual([]);
@@ -108,15 +131,22 @@ describe('direct Data API writes are impossible (writes must go through the API)
 
   it('creator cannot cancel directly', async () => {
     const avery = await clientAs('avery');
-    const { error } = await avery.from('meetups').update({ status: 'cancelled' }).eq('id', meetups.saturdayLoop);
+    const { error } = await avery
+      .from('meetups')
+      .update({ status: 'cancelled' })
+      .eq('id', meetups.saturdayLoop);
     expect(error?.code).toBe('42501');
-    const { rows } = await owner.query(`select status from public.meetups where id = $1`, [meetups.saturdayLoop]);
+    const { rows } = await owner.query(`select status from public.meetups where id = $1`, [
+      meetups.saturdayLoop,
+    ]);
     expect(rows[0].status).toBe('scheduled');
   });
 
   it('cannot RSVP or withdraw directly', async () => {
     const sam = await clientAs('sam');
-    const insert = await sam.from('rsvps').insert({ meetup_id: meetups.weeknightWalk, user_id: users.sam });
+    const insert = await sam
+      .from('rsvps')
+      .insert({ meetup_id: meetups.weeknightWalk, user_id: users.sam });
     expect(insert.error?.code).toBe('42501');
     const jordan = await clientAs('jordan');
     const remove = await jordan.from('rsvps').delete().eq('meetup_id', meetups.saturdayLoop);
@@ -137,7 +167,10 @@ describe('direct Data API writes are impossible (writes must go through the API)
     expect(viaSchema.error).not.toBeNull();
     const viaPublic = await sam.rpc('insert_meetup', {});
     expect(viaPublic.error).not.toBeNull();
-    const { rows } = await owner.query(`select count(*)::int as n from public.meetups where title like $1`, [`${TEST_TITLE_PREFIX}%`]);
+    const { rows } = await owner.query(
+      `select count(*)::int as n from public.meetups where title like $1`,
+      [`${TEST_TITLE_PREFIX}%`],
+    );
     expect(rows[0].n).toBe(0);
   });
 });
@@ -147,17 +180,23 @@ describe('concurrency: RSVP racing a cancel', () => {
     const asMember = async (client: pg.PoolClient, userId: string) => {
       await client.query('begin');
       await client.query('set local role altair_api_writer');
-      await client.query(`select set_config('request.jwt.claims', $1, true)`, [JSON.stringify({ sub: userId })]);
+      await client.query(`select set_config('request.jwt.claims', $1, true)`, [
+        JSON.stringify({ sub: userId }),
+      ]);
     };
     const creator = await owner.connect();
     const attendee = await owner.connect();
     try {
       await asMember(creator, users.jordan);
-      await creator.query(`update public.meetups set status = 'cancelled' where id = $1`, [meetups.weeknightWalk]);
+      await creator.query(`update public.meetups set status = 'cancelled' where id = $1`, [
+        meetups.weeknightWalk,
+      ]);
 
       await asMember(attendee, users.sam);
       const rsvp = attendee
-        .query(`insert into public.rsvps (meetup_id, user_id) values ($1, app.current_user_id())`, [meetups.weeknightWalk])
+        .query(`insert into public.rsvps (meetup_id, user_id) values ($1, app.current_user_id())`, [
+          meetups.weeknightWalk,
+        ])
         .then(
           () => 'inserted',
           (e: { code?: string }) => e.code,
@@ -171,7 +210,10 @@ describe('concurrency: RSVP racing a cancel', () => {
       creator.release();
       attendee.release();
     }
-    const { rows } = await owner.query(`select count(*)::int as n from public.rsvps where meetup_id = $1`, [meetups.weeknightWalk]);
+    const { rows } = await owner.query(
+      `select count(*)::int as n from public.rsvps where meetup_id = $1`,
+      [meetups.weeknightWalk],
+    );
     expect(rows[0].n).toBe(0);
   });
 });

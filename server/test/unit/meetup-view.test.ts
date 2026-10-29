@@ -23,12 +23,19 @@ const creator = { userId: base.creatorId };
 
 describe('viewerFor', () => {
   it('member without RSVP can RSVP but not cancel', () => {
-    expect(viewerFor(base, member)).toEqual({ isCreator: false, isAttending: false, canRsvp: true, canCancel: false });
+    expect(viewerFor(base, member)).toEqual({
+      isCreator: false,
+      isAttending: false,
+      canRsvp: true,
+      canCancel: false,
+    });
   });
 
   it('creator can cancel while scheduled, not once cancelled', () => {
     expect(viewerFor(base, creator).canCancel).toBe(true);
-    expect(viewerFor({ ...base, status: 'cancelled', cancelledAt: new Date() }, creator).canCancel).toBe(false);
+    expect(
+      viewerFor({ ...base, status: 'cancelled', cancelledAt: new Date() }, creator).canCancel,
+    ).toBe(false);
   });
 
   it('no RSVP once cancelled, started, or already attending', () => {

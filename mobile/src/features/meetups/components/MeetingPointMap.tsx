@@ -9,10 +9,20 @@ const METERS_PER_DEGREE = 111_320;
 /** Frames the exact point closely, or the whole approximate circle with some margin. */
 export function regionFor(point: MeetingPointView): Region {
   if (point.visibility === 'exact') {
-    return { latitude: point.latitude, longitude: point.longitude, latitudeDelta: 0.006, longitudeDelta: 0.006 };
+    return {
+      latitude: point.latitude,
+      longitude: point.longitude,
+      latitudeDelta: 0.006,
+      longitudeDelta: 0.006,
+    };
   }
   const delta = (point.radiusMeters * 2 * 1.5) / METERS_PER_DEGREE;
-  return { latitude: point.centerLatitude, longitude: point.centerLongitude, latitudeDelta: delta, longitudeDelta: delta };
+  return {
+    latitude: point.centerLatitude,
+    longitude: point.centerLongitude,
+    latitudeDelta: delta,
+    longitudeDelta: delta,
+  };
 }
 
 interface Props {
@@ -42,7 +52,11 @@ export function MeetingPointMap({ point, height = 220 }: Props) {
         toolbarEnabled={false}
         showsUserLocation={false}
         showsPointsOfInterests={false}
-        accessibilityLabel={isExact ? `Map showing the exact meeting point: ${point.placeName}` : 'Map showing the approximate meeting area'}
+        accessibilityLabel={
+          isExact
+            ? `Map showing the exact meeting point: ${point.placeName}`
+            : 'Map showing the approximate meeting area'
+        }
       >
         {isExact ? (
           <Marker
@@ -63,8 +77,14 @@ export function MeetingPointMap({ point, height = 220 }: Props) {
         )}
       </MapView>
       <View style={styles.legend} pointerEvents="none">
-        <Ionicons name={isExact ? 'location' : 'scan-circle-outline'} size={14} color={isExact ? colors.primary : colors.accent} />
-        <Text style={styles.legendText}>{isExact ? 'Exact meeting point' : `Approximate area · ~${point.radiusMeters} m`}</Text>
+        <Ionicons
+          name={isExact ? 'location' : 'scan-circle-outline'}
+          size={14}
+          color={isExact ? colors.primary : colors.accent}
+        />
+        <Text style={styles.legendText}>
+          {isExact ? 'Exact meeting point' : `Approximate area · ~${point.radiusMeters} m`}
+        </Text>
       </View>
     </View>
   );

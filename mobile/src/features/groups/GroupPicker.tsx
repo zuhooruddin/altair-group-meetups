@@ -11,7 +11,12 @@ interface Props {
 /** Horizontal chips fed by the "my groups" endpoint. */
 export function GroupPicker({ groups, selectedId, onSelect }: Props) {
   return (
-    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row} accessibilityRole="tablist">
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={styles.row}
+      accessibilityRole="tablist"
+    >
       {groups.map((group) => {
         const selected = group.id === selectedId;
         return (

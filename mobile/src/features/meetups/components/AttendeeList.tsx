@@ -10,7 +10,13 @@ const initials = (name: string) =>
     .slice(0, 2)
     .toUpperCase();
 
-export function AttendeeList({ attendees, currentUserId }: { attendees: Attendee[]; currentUserId: string | null }) {
+export function AttendeeList({
+  attendees,
+  currentUserId,
+}: {
+  attendees: Attendee[];
+  currentUserId: string | null;
+}) {
   if (attendees.length === 0) {
     return <Text style={styles.empty}>No one has RSVP’d yet.</Text>;
   }

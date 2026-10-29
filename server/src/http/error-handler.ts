@@ -27,9 +27,7 @@ export function registerErrorHandling(app: FastifyInstance): void {
     // Fastify's own 4xx errors: malformed JSON, wrong content type, too large...
     const status = (error as FastifyError).statusCode;
     if (status && status >= 400 && status < 500) {
-      return reply
-        .status(400)
-        .send(body(new AppError('VALIDATION_FAILED', 'Malformed request')));
+      return reply.status(400).send(body(new AppError('VALIDATION_FAILED', 'Malformed request')));
     }
 
     request.log.error({ err: error }, 'unhandled error');

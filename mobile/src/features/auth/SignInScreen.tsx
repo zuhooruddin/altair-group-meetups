@@ -1,6 +1,14 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { z } from 'zod';
 import { Banner } from '../../ui/Banner';
@@ -46,7 +54,10 @@ export function SignInScreen() {
 
   return (
     <SafeAreaView style={styles.safe}>
-      <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <KeyboardAvoidingView
+        style={styles.flex}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      >
         <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
           <View style={styles.brand}>
             <View style={styles.logo}>
@@ -90,7 +101,11 @@ export function SignInScreen() {
                   onPress={() => setShowPassword((v) => !v)}
                   hitSlop={12}
                 >
-                  <Ionicons name={showPassword ? 'eye-off-outline' : 'eye-outline'} size={20} color={colors.textMuted} />
+                  <Ionicons
+                    name={showPassword ? 'eye-off-outline' : 'eye-outline'}
+                    size={20}
+                    color={colors.textMuted}
+                  />
                 </Pressable>
               }
             />
@@ -103,7 +118,12 @@ export function SignInScreen() {
               <Text style={styles.devTitle}>Seeded test accounts</Text>
               <View style={styles.devRow}>
                 {SEED_EMAILS.map((seed) => (
-                  <Pressable key={seed} style={styles.devChip} onPress={() => setEmail(seed)} accessibilityRole="button">
+                  <Pressable
+                    key={seed}
+                    style={styles.devChip}
+                    onPress={() => setEmail(seed)}
+                    accessibilityRole="button"
+                  >
                     <Text style={styles.devChipText}>{seed.split('@')[0]}</Text>
                   </Pressable>
                 ))}
@@ -136,6 +156,11 @@ const styles = StyleSheet.create({
   dev: { gap: spacing.sm, alignItems: 'center' },
   devTitle: { ...typography.caption, color: colors.textMuted },
   devRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, justifyContent: 'center' },
-  devChip: { borderRadius: radius.pill, backgroundColor: colors.secondary, paddingHorizontal: spacing.md, paddingVertical: spacing.xs + 2 },
+  devChip: {
+    borderRadius: radius.pill,
+    backgroundColor: colors.secondary,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs + 2,
+  },
   devChipText: { ...typography.caption, color: colors.primary, fontWeight: '600' },
 });

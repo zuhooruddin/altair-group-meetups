@@ -13,7 +13,15 @@ interface ButtonProps {
   testID?: string;
 }
 
-export function Button({ label, onPress, variant = 'primary', loading, disabled, style, testID }: ButtonProps) {
+export function Button({
+  label,
+  onPress,
+  variant = 'primary',
+  loading,
+  disabled,
+  style,
+  testID,
+}: ButtonProps) {
   const inactive = disabled || loading;
   const palette = variants[variant];
   return (
@@ -26,7 +34,10 @@ export function Button({ label, onPress, variant = 'primary', loading, disabled,
       disabled={inactive}
       style={({ pressed }) => [
         styles.base,
-        { backgroundColor: pressed ? palette.pressed : palette.background, borderColor: palette.border },
+        {
+          backgroundColor: pressed ? palette.pressed : palette.background,
+          borderColor: palette.border,
+        },
         inactive && styles.inactive,
         style,
       ]}
@@ -40,11 +51,34 @@ export function Button({ label, onPress, variant = 'primary', loading, disabled,
   );
 }
 
-const variants: Record<Variant, { background: string; pressed: string; text: string; border: string }> = {
-  primary: { background: colors.primary, pressed: colors.primaryPressed, text: colors.onPrimary, border: colors.primary },
-  secondary: { background: colors.surface, pressed: colors.secondary, text: colors.primary, border: colors.secondaryStrong },
-  danger: { background: colors.surface, pressed: colors.dangerSoft, text: colors.danger, border: colors.danger },
-  ghost: { background: 'transparent', pressed: colors.secondary, text: colors.primary, border: 'transparent' },
+const variants: Record<
+  Variant,
+  { background: string; pressed: string; text: string; border: string }
+> = {
+  primary: {
+    background: colors.primary,
+    pressed: colors.primaryPressed,
+    text: colors.onPrimary,
+    border: colors.primary,
+  },
+  secondary: {
+    background: colors.surface,
+    pressed: colors.secondary,
+    text: colors.primary,
+    border: colors.secondaryStrong,
+  },
+  danger: {
+    background: colors.surface,
+    pressed: colors.dangerSoft,
+    text: colors.danger,
+    border: colors.danger,
+  },
+  ghost: {
+    background: 'transparent',
+    pressed: colors.secondary,
+    text: colors.primary,
+    border: 'transparent',
+  },
 };
 
 const styles = StyleSheet.create({

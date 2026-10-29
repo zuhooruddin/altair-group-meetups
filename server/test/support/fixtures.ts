@@ -38,12 +38,28 @@ export const meetups = {
 } as const;
 
 export const exactPoints = {
-  saturdayLoop: { placeName: 'North gate, Linden Park', latitude: 40.012046, longitude: -99.984517 },
-  weeknightWalk: { placeName: 'Front steps, Elm Avenue Library', latitude: 40.003318, longitude: -99.979762 },
-  riversideSunrise: { placeName: 'Boathouse lot, Riverside Path', latitude: 39.985239, longitude: -100.009683 },
+  saturdayLoop: {
+    placeName: 'North gate, Linden Park',
+    latitude: 40.012046,
+    longitude: -99.984517,
+  },
+  weeknightWalk: {
+    placeName: 'Front steps, Elm Avenue Library',
+    latitude: 40.003318,
+    longitude: -99.979762,
+  },
+  riversideSunrise: {
+    placeName: 'Boathouse lot, Riverside Path',
+    latitude: 39.985239,
+    longitude: -100.009683,
+  },
 } as const;
 
-export const SPARE_POINT = { placeName: 'Fountain plaza, Town Green', latitude: 39.999134, longitude: -99.999461 };
+export const SPARE_POINT = {
+  placeName: 'Fountain plaza, Town Green',
+  latitude: 39.999134,
+  longitude: -99.999461,
+};
 
 /** PRIVATE home coordinates from the seed, used only to prove they never leak. */
 export const homeCoordinates = [

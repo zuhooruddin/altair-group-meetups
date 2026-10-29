@@ -18,12 +18,18 @@ export function meetupsRoutes(service: MeetupsService): FastifyPluginAsync {
   return async (app) => {
     app.get('/groups/:groupId/meetups', async (request) => {
       const { groupId } = parseInput(groupIdParamsSchema, request.params, 'path parameters');
-      return toResponse(listMeetupsResponseSchema, await service.listForGroup(actorOf(request), groupId));
+      return toResponse(
+        listMeetupsResponseSchema,
+        await service.listForGroup(actorOf(request), groupId),
+      );
     });
 
     app.get('/groups/:groupId/map', async (request) => {
       const { groupId } = parseInput(groupIdParamsSchema, request.params, 'path parameters');
-      return toResponse(groupMapResponseSchema, await service.getGroupMap(actorOf(request), groupId));
+      return toResponse(
+        groupMapResponseSchema,
+        await service.getGroupMap(actorOf(request), groupId),
+      );
     });
 
     app.get('/meetups/:meetupId', async (request) => {
@@ -34,12 +40,18 @@ export function meetupsRoutes(service: MeetupsService): FastifyPluginAsync {
 
     app.get('/meetups/:meetupId/attendees', async (request) => {
       const { meetupId } = parseInput(meetupIdParamsSchema, request.params, 'path parameters');
-      return toResponse(attendeesResponseSchema, await service.getAttendees(actorOf(request), meetupId));
+      return toResponse(
+        attendeesResponseSchema,
+        await service.getAttendees(actorOf(request), meetupId),
+      );
     });
 
     app.get('/meetups/:meetupId/map', async (request) => {
       const { meetupId } = parseInput(meetupIdParamsSchema, request.params, 'path parameters');
-      return toResponse(meetupMapResponseSchema, await service.getMeetupMap(actorOf(request), meetupId));
+      return toResponse(
+        meetupMapResponseSchema,
+        await service.getMeetupMap(actorOf(request), meetupId),
+      );
     });
 
     // ---- writes: validated with the shared contract before anything else ----
@@ -55,7 +67,9 @@ export function meetupsRoutes(service: MeetupsService): FastifyPluginAsync {
       const actor = actorOf(request);
       const { meetupId } = parseInput(meetupIdParamsSchema, request.params, 'path parameters');
       parseInput(emptyBodySchema, request.body, 'request body');
-      return toResponse(meetupDetailResponseSchema, { meetup: await service.cancel(actor, meetupId) });
+      return toResponse(meetupDetailResponseSchema, {
+        meetup: await service.cancel(actor, meetupId),
+      });
     });
   };
 }

@@ -16,7 +16,8 @@ const round6 = (n: number) => Math.round(n * 1e6) / 1e6;
 /** Tap the map (or drag the pin) to choose the meeting point. Never uses the member's own location. */
 export function LocationPicker({ latitude, longitude, onPick }: Props) {
   const hasPoint = latitude !== null && longitude !== null;
-  const pick = (e: MapPressEvent) => onPick(round6(e.nativeEvent.coordinate.latitude), round6(e.nativeEvent.coordinate.longitude));
+  const pick = (e: MapPressEvent) =>
+    onPick(round6(e.nativeEvent.coordinate.latitude), round6(e.nativeEvent.coordinate.longitude));
 
   return (
     <View style={styles.wrapper}>
@@ -38,20 +39,32 @@ export function LocationPicker({ latitude, longitude, onPick }: Props) {
           <Marker
             coordinate={{ latitude, longitude }}
             draggable
-            onDragEnd={(e) => onPick(round6(e.nativeEvent.coordinate.latitude), round6(e.nativeEvent.coordinate.longitude))}
+            onDragEnd={(e) =>
+              onPick(
+                round6(e.nativeEvent.coordinate.latitude),
+                round6(e.nativeEvent.coordinate.longitude),
+              )
+            }
             pinColor={colors.primary}
           />
         ) : null}
       </MapView>
       <View style={styles.hint} pointerEvents="none">
-        <Text style={styles.hintText}>{hasPoint ? 'Drag the pin or tap to move it' : 'Tap the map to drop a pin'}</Text>
+        <Text style={styles.hintText}>
+          {hasPoint ? 'Drag the pin or tap to move it' : 'Tap the map to drop a pin'}
+        </Text>
       </View>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  wrapper: { height: 200, borderRadius: radius.lg, overflow: 'hidden', backgroundColor: colors.secondary },
+  wrapper: {
+    height: 200,
+    borderRadius: radius.lg,
+    overflow: 'hidden',
+    backgroundColor: colors.secondary,
+  },
   hint: {
     position: 'absolute',
     bottom: spacing.sm,

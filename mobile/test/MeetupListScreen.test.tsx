@@ -9,15 +9,25 @@ const groups = [
 ];
 
 const renderList = (services: ReturnType<typeof fakeServices>, navigation = fakeNavigation()) =>
-  renderWithServices(<MeetupListScreen route={{ key: 'm', name: 'Meetups' } as never} navigation={navigation} />, services);
+  renderWithServices(
+    <MeetupListScreen route={{ key: 'm', name: 'Meetups' } as never} navigation={navigation} />,
+    services,
+  );
 
 describe('MeetupListScreen', () => {
   it('loads groups, picks the first, and lists its meetups including cancelled ones', async () => {
     const listForGroup = jest.fn(async () => [
       summary(),
-      summary({ id: 'c3000000-0000-4000-8000-000000000002', title: 'Weeknight short walk', status: 'cancelled', cancelledAt: '2026-10-29T12:00:00.000Z' }),
+      summary({
+        id: 'c3000000-0000-4000-8000-000000000002',
+        title: 'Weeknight short walk',
+        status: 'cancelled',
+        cancelledAt: '2026-10-29T12:00:00.000Z',
+      }),
     ]);
-    await renderList(fakeServices({ groups: { listMine: async () => groups }, meetups: { listForGroup } }));
+    await renderList(
+      fakeServices({ groups: { listMine: async () => groups }, meetups: { listForGroup } }),
+    );
 
     expect(screen.getByTestId('state-loading')).toBeTruthy();
     expect(await screen.findByText('Saturday morning loop')).toBeTruthy();
@@ -28,7 +38,9 @@ describe('MeetupListScreen', () => {
 
   it('switches group when another chip is pressed', async () => {
     const listForGroup = jest.fn(async () => [summary()]);
-    await renderList(fakeServices({ groups: { listMine: async () => groups }, meetups: { listForGroup } }));
+    await renderList(
+      fakeServices({ groups: { listMine: async () => groups }, meetups: { listForGroup } }),
+    );
     await fireEvent.press(await screen.findByTestId(`group-chip-${RIVERSIDE}`));
     await screen.findByText('Saturday morning loop');
     expect(listForGroup).toHaveBeenCalledWith(RIVERSIDE);
@@ -36,7 +48,13 @@ describe('MeetupListScreen', () => {
 
   it('shows the empty state with a create action', async () => {
     const navigation = fakeNavigation() as unknown as { navigate: jest.Mock };
-    await renderList(fakeServices({ groups: { listMine: async () => groups }, meetups: { listForGroup: async () => [] } }), navigation as never);
+    await renderList(
+      fakeServices({
+        groups: { listMine: async () => groups },
+        meetups: { listForGroup: async () => [] },
+      }),
+      navigation as never,
+    );
     expect(await screen.findByText('No meetups yet')).toBeTruthy();
     await fireEvent.press(screen.getByText('Create a meetup'));
     expect(navigation.navigate).toHaveBeenCalledWith('CreateMeetup', { groupId: MAPLE });
@@ -46,7 +64,9 @@ describe('MeetupListScreen', () => {
     await renderList(
       fakeServices({
         groups: { listMine: async () => groups },
-        meetups: { listForGroup: async () => Promise.reject(new Error('Could not reach the server.')) },
+        meetups: {
+          listForGroup: async () => Promise.reject(new Error('Could not reach the server.')),
+        },
       }),
     );
     expect(await screen.findByTestId('state-error')).toBeTruthy();

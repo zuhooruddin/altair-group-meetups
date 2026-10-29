@@ -12,7 +12,8 @@ export type AppConfig = z.infer<typeof schema>;
  * Public, build-time configuration. Expo inlines EXPO_PUBLIC_* values, which
  * is why each is read by its full literal name. Nothing secret belongs here.
  */
-export function readAppConfig(): { ok: true; config: AppConfig } | { ok: false; problems: string[] } {
+export function readAppConfig():
+  { ok: true; config: AppConfig } | { ok: false; problems: string[] } {
   const parsed = schema.safeParse({
     supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL,
     supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
@@ -24,5 +25,10 @@ export function readAppConfig(): { ok: true; config: AppConfig } | { ok: false; 
     supabaseAnonKey: 'EXPO_PUBLIC_SUPABASE_ANON_KEY',
     apiUrl: 'EXPO_PUBLIC_API_URL',
   };
-  return { ok: false, problems: parsed.error.issues.map((i) => `${names[String(i.path[0])] ?? i.path.join('.')} is missing or invalid`) };
+  return {
+    ok: false,
+    problems: parsed.error.issues.map(
+      (i) => `${names[String(i.path[0])] ?? i.path.join('.')} is missing or invalid`,
+    ),
+  };
 }

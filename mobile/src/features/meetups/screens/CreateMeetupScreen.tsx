@@ -1,6 +1,19 @@
-import { createMeetupRequestSchema, MEETUP_TITLE_MAX, PLACE_NAME_MAX, type CreateMeetupInput } from '@altair/shared';
+import {
+  createMeetupRequestSchema,
+  MEETUP_TITLE_MAX,
+  PLACE_NAME_MAX,
+  type CreateMeetupInput,
+} from '@altair/shared';
 import { useState } from 'react';
-import { KeyboardAvoidingView, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
+import {
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  Text,
+  View,
+} from 'react-native';
 import { ApiError, messageFor } from '../../../core/api/api-error';
 import type { ScreenProps } from '../../../navigation/types';
 import { Banner } from '../../../ui/Banner';
@@ -14,7 +27,11 @@ import { LocationPicker } from '../components/LocationPicker';
 import { useCreateMeetup } from '../hooks';
 
 /** The seed's spare public place, offered as a one-tap fill. */
-const SPARE_PLACE = { placeName: 'Fountain plaza, Town Green', latitude: 39.999134, longitude: -99.999461 };
+const SPARE_PLACE = {
+  placeName: 'Fountain plaza, Town Green',
+  latitude: 39.999134,
+  longitude: -99.999461,
+};
 
 type FieldKey = 'groupId' | 'title' | 'startsAt' | 'placeName' | 'latitude' | 'longitude';
 type FieldErrors = Partial<Record<FieldKey, string>>;
@@ -69,22 +86,36 @@ export function CreateMeetupScreen({ route, navigation }: ScreenProps<'CreateMee
     // Same schema the server validates with; the server re-checks everything.
     const parsed = createMeetupRequestSchema.safeParse(input);
     if (!parsed.success) {
-      setErrors(toFieldErrors(parsed.error.issues.map((i) => ({ path: i.path.join('.'), message: i.message }))));
+      setErrors(
+        toFieldErrors(
+          parsed.error.issues.map((i) => ({ path: i.path.join('.'), message: i.message })),
+        ),
+      );
       return;
     }
     setErrors({});
     create.mutate(parsed.data, {
-      onSuccess: (meetup) => navigation.replace('MeetupDetail', { meetupId: meetup.id, flash: 'created' }),
+      onSuccess: (meetup) =>
+        navigation.replace('MeetupDetail', { meetupId: meetup.id, flash: 'created' }),
       onError: (error) => {
-        if (error instanceof ApiError && error.issues.length > 0) setErrors(toFieldErrors(error.issues));
+        if (error instanceof ApiError && error.issues.length > 0)
+          setErrors(toFieldErrors(error.issues));
         setServerError(messageFor(error));
       },
     });
   };
 
   return (
-    <KeyboardAvoidingView style={styles.flex} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView style={styles.screen} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" testID="create-meetup">
+    <KeyboardAvoidingView
+      style={styles.flex}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <ScrollView
+        style={styles.screen}
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+        testID="create-meetup"
+      >
         {groups.data && groups.data.length > 1 ? (
           <View style={styles.field}>
             <Text style={styles.label}>Group</Text>
@@ -106,12 +137,18 @@ export function CreateMeetupScreen({ route, navigation }: ScreenProps<'CreateMee
           testID="title-input"
         />
 
-        <DateTimeField label="Date and start time" value={startsAt} onChange={setStartsAt} error={errors.startsAt} />
+        <DateTimeField
+          label="Date and start time"
+          value={startsAt}
+          onChange={setStartsAt}
+          error={errors.startsAt}
+        />
 
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Meeting point</Text>
           <Text style={styles.sectionHint}>
-            Choose a public place. Members who haven’t RSVP’d only see an approximate area until they do.
+            Choose a public place. Members who haven’t RSVP’d only see an approximate area until
+            they do.
           </Text>
           <Pressable
             style={styles.quickFill}
@@ -140,16 +177,37 @@ export function CreateMeetupScreen({ route, navigation }: ScreenProps<'CreateMee
           />
           <View style={styles.coords}>
             <View style={styles.coord}>
-              <TextField label="Latitude" value={latText} onChangeText={setLatText} keyboardType="numbers-and-punctuation" placeholder="39.999134" error={errors.latitude} testID="lat-input" />
+              <TextField
+                label="Latitude"
+                value={latText}
+                onChangeText={setLatText}
+                keyboardType="numbers-and-punctuation"
+                placeholder="39.999134"
+                error={errors.latitude}
+                testID="lat-input"
+              />
             </View>
             <View style={styles.coord}>
-              <TextField label="Longitude" value={lngText} onChangeText={setLngText} keyboardType="numbers-and-punctuation" placeholder="-99.999461" error={errors.longitude} testID="lng-input" />
+              <TextField
+                label="Longitude"
+                value={lngText}
+                onChangeText={setLngText}
+                keyboardType="numbers-and-punctuation"
+                placeholder="-99.999461"
+                error={errors.longitude}
+                testID="lng-input"
+              />
             </View>
           </View>
         </View>
 
         {serverError ? <Banner tone="error" message={serverError} testID="create-error" /> : null}
-        <Button label="Create meetup" onPress={submit} loading={create.isPending} testID="create-submit" />
+        <Button
+          label="Create meetup"
+          onPress={submit}
+          loading={create.isPending}
+          testID="create-submit"
+        />
       </ScrollView>
     </KeyboardAvoidingView>
   );

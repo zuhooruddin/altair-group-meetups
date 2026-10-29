@@ -13,7 +13,14 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
 
 const theme = {
   ...DefaultTheme,
-  colors: { ...DefaultTheme.colors, primary: colors.primary, background: colors.background, card: colors.background, text: colors.text, border: colors.border },
+  colors: {
+    ...DefaultTheme.colors,
+    primary: colors.primary,
+    background: colors.background,
+    card: colors.background,
+    text: colors.text,
+    border: colors.border,
+  },
 };
 
 export function RootNavigator() {
@@ -34,9 +41,21 @@ export function RootNavigator() {
           <Stack.Screen name="SignIn" component={SignInScreen} options={{ headerShown: false }} />
         ) : (
           <>
-            <Stack.Screen name="Meetups" component={MeetupListScreen} options={{ title: 'Group meetups' }} />
-            <Stack.Screen name="MeetupDetail" component={MeetupDetailScreen} options={{ title: 'Meetup' }} />
-            <Stack.Screen name="CreateMeetup" component={CreateMeetupScreen} options={{ title: 'New meetup', presentation: 'modal' }} />
+            <Stack.Screen
+              name="Meetups"
+              component={MeetupListScreen}
+              options={{ title: 'Group meetups' }}
+            />
+            <Stack.Screen
+              name="MeetupDetail"
+              component={MeetupDetailScreen}
+              options={{ title: 'Meetup' }}
+            />
+            <Stack.Screen
+              name="CreateMeetup"
+              component={CreateMeetupScreen}
+              options={{ title: 'New meetup', presentation: 'modal' }}
+            />
           </>
         )}
       </Stack.Navigator>

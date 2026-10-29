@@ -36,7 +36,8 @@ export class AppError extends Error {
 
 // One message per case, so a member and an outsider asking about a meetup
 // they cannot see get byte-identical responses.
-export const notFound = (what: 'Meetup' | 'Group') => new AppError('NOT_FOUND', `${what} not found`);
+export const notFound = (what: 'Meetup' | 'Group') =>
+  new AppError('NOT_FOUND', `${what} not found`);
 export const meetupCancelled = () =>
   new AppError('MEETUP_CANCELLED', 'This meetup has been cancelled and no longer accepts RSVPs');
 export const meetupStarted = () =>

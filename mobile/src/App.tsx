@@ -23,7 +23,10 @@ function createServices(): AppServices | { problems: string[] } {
 
 export function AppRoot({ services }: { services: AppServices }) {
   const [queryClient] = useState(
-    () => new QueryClient({ defaultOptions: { queries: { retry: 1, staleTime: 15_000 }, mutations: { retry: 0 } } }),
+    () =>
+      new QueryClient({
+        defaultOptions: { queries: { retry: 1, staleTime: 15_000 }, mutations: { retry: 0 } },
+      }),
   );
   return (
     <SafeAreaProvider>
@@ -42,7 +45,11 @@ export function AppRoot({ services }: { services: AppServices }) {
 export default function App() {
   const [services] = useState(createServices);
   if ('problems' in services) {
-    return <ErrorState message={`App is not configured (see mobile/.env.example): ${services.problems.join('; ')}`} />;
+    return (
+      <ErrorState
+        message={`App is not configured (see mobile/.env.example): ${services.problems.join('; ')}`}
+      />
+    );
   }
   return <AppRoot services={services} />;
 }

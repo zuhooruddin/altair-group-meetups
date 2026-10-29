@@ -1,12 +1,18 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react';
 import type { AuthSession } from '../../core/ports';
 import { useServices } from '../../core/services';
 
 type AuthState =
-  | { status: 'loading' }
-  | { status: 'signedOut' }
-  | { status: 'signedIn'; session: AuthSession };
+  { status: 'loading' } | { status: 'signedOut' } | { status: 'signedIn'; session: AuthSession };
 
 interface AuthContextValue {
   state: AuthState;
@@ -25,7 +31,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let active = true;
     auth
       .currentSession()
-      .then((session) => active && setState(session ? { status: 'signedIn', session } : { status: 'signedOut' }))
+      .then(
+        (session) =>
+          active && setState(session ? { status: 'signedIn', session } : { status: 'signedOut' }),
+      )
       .catch(() => active && setState({ status: 'signedOut' }));
     const unsubscribe = auth.onSessionChange((session) => {
       if (!session) queryClient.clear(); // never show one member's cached data to the next

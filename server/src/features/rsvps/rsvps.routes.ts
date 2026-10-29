@@ -11,14 +11,18 @@ export function rsvpsRoutes(service: RsvpsService): FastifyPluginAsync {
       const actor = actorOf(request);
       const { meetupId } = parseInput(meetupIdParamsSchema, request.params, 'path parameters');
       parseInput(emptyBodySchema, request.body, 'request body');
-      return toResponse(meetupDetailResponseSchema, { meetup: await service.rsvp(actor, meetupId) });
+      return toResponse(meetupDetailResponseSchema, {
+        meetup: await service.rsvp(actor, meetupId),
+      });
     });
 
     app.delete('/meetups/:meetupId/rsvp', async (request) => {
       const actor = actorOf(request);
       const { meetupId } = parseInput(meetupIdParamsSchema, request.params, 'path parameters');
       parseInput(emptyBodySchema, request.body, 'request body');
-      return toResponse(meetupDetailResponseSchema, { meetup: await service.withdraw(actor, meetupId) });
+      return toResponse(meetupDetailResponseSchema, {
+        meetup: await service.withdraw(actor, meetupId),
+      });
     });
   };
 }

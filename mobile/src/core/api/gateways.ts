@@ -11,7 +11,8 @@ import type { ApiClient } from './api-client';
 /** Reads and writes both go through the API; the app never writes to Supabase tables. */
 export function createGroupsGateway(api: ApiClient): GroupsGateway {
   return {
-    listMine: async () => (await api.request('GET', apiRoutes.myGroups, myGroupsResponseSchema)).groups,
+    listMine: async () =>
+      (await api.request('GET', apiRoutes.myGroups, myGroupsResponseSchema)).groups,
   };
 }
 
@@ -21,7 +22,8 @@ export function createMeetupsGateway(api: ApiClient): MeetupsGateway {
 
   return {
     listForGroup: async (groupId) =>
-      (await api.request('GET', apiRoutes.groupMeetups(groupId), listMeetupsResponseSchema)).meetups,
+      (await api.request('GET', apiRoutes.groupMeetups(groupId), listMeetupsResponseSchema))
+        .meetups,
     get: (meetupId) => detail('GET', apiRoutes.meetup(meetupId)),
     create: (input: CreateMeetupRequest) => detail('POST', apiRoutes.meetups, input),
     cancel: (meetupId) => detail('POST', apiRoutes.cancelMeetup(meetupId)),

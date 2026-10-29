@@ -15,7 +15,8 @@ try {
     `select m.title, m.starts_at, (select count(*)::int from public.rsvps r where r.meetup_id = m.id) as rsvps
        from public.meetups m where m.id::text like 'c3000000-%' order by m.starts_at`,
   );
-  for (const r of rows) console.log(`${r.title.padEnd(24)} ${r.starts_at.toISOString()}  RSVPs: ${r.rsvps}`);
+  for (const r of rows)
+    console.log(`${r.title.padEnd(24)} ${r.starts_at.toISOString()}  RSVPs: ${r.rsvps}`);
 } finally {
   await client.end();
 }

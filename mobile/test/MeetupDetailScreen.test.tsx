@@ -1,11 +1,23 @@
 import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 import { Alert } from 'react-native';
 import { MeetupDetailScreen } from '../src/features/meetups/screens/MeetupDetailScreen';
-import { AVERY, SAM, SATURDAY, detail, fakeNavigation, fakeServices, points, renderWithServices } from './helpers';
+import {
+  AVERY,
+  SAM,
+  SATURDAY,
+  detail,
+  fakeNavigation,
+  fakeServices,
+  points,
+  renderWithServices,
+} from './helpers';
 
 const renderDetail = (services: ReturnType<typeof fakeServices>) =>
   renderWithServices(
-    <MeetupDetailScreen route={{ key: 'd', name: 'MeetupDetail', params: { meetupId: SATURDAY } }} navigation={fakeNavigation()} />,
+    <MeetupDetailScreen
+      route={{ key: 'd', name: 'MeetupDetail', params: { meetupId: SATURDAY } }}
+      navigation={fakeNavigation()}
+    />,
     services,
   );
 
@@ -30,7 +42,10 @@ describe('MeetupDetailScreen', () => {
         meetingPoint: points.exact,
         attendeeCount: 3,
         viewer: { isCreator: false, isAttending: true, canRsvp: false, canCancel: false },
-        attendees: [...detail().attendees, { userId: SAM, displayName: 'Sam Okafor', rsvpAt: '2026-10-29T11:00:00.000Z' }],
+        attendees: [
+          ...detail().attendees,
+          { userId: SAM, displayName: 'Sam Okafor', rsvpAt: '2026-10-29T11:00:00.000Z' },
+        ],
       }),
     );
     await renderDetail(fakeServices({ meetups: { get: async () => detail(), rsvp } }));
@@ -54,7 +69,12 @@ describe('MeetupDetailScreen', () => {
     });
     await renderDetail(fakeServices({ meetups: { get: async () => creatorView } }, AVERY));
     await fireEvent.press(await screen.findByTestId('cancel-button'));
-    expect(alert).toHaveBeenCalledWith('Cancel this meetup?', expect.any(String), expect.any(Array), expect.anything());
+    expect(alert).toHaveBeenCalledWith(
+      'Cancel this meetup?',
+      expect.any(String),
+      expect.any(Array),
+      expect.anything(),
+    );
     alert.mockRestore();
   });
 
@@ -63,7 +83,11 @@ describe('MeetupDetailScreen', () => {
       fakeServices({
         meetups: {
           get: async () =>
-            detail({ status: 'cancelled', cancelledAt: '2026-10-29T12:00:00.000Z', viewer: { isCreator: false, isAttending: false, canRsvp: false, canCancel: false } }),
+            detail({
+              status: 'cancelled',
+              cancelledAt: '2026-10-29T12:00:00.000Z',
+              viewer: { isCreator: false, isAttending: false, canRsvp: false, canCancel: false },
+            }),
         },
       }),
     );
@@ -73,7 +97,9 @@ describe('MeetupDetailScreen', () => {
   });
 
   it('shows an error state with retry when the meetup cannot be loaded', async () => {
-    await renderDetail(fakeServices({ meetups: { get: async () => Promise.reject(new Error('Meetup not found')) } }));
+    await renderDetail(
+      fakeServices({ meetups: { get: async () => Promise.reject(new Error('Meetup not found')) } }),
+    );
     expect(await screen.findByTestId('state-error')).toBeTruthy();
     expect(screen.getByText('Meetup not found')).toBeTruthy();
   });
@@ -84,11 +110,20 @@ describe('MeetupDetailScreen', () => {
       fakeServices({
         meetups: {
           get: async () => detail(),
-          rsvp: async () => Promise.reject(new ApiError('MEETUP_STARTED', 'This meetup has already started and no longer accepts RSVPs', 409)),
+          rsvp: async () =>
+            Promise.reject(
+              new ApiError(
+                'MEETUP_STARTED',
+                'This meetup has already started and no longer accepts RSVPs',
+                409,
+              ),
+            ),
         },
       }),
     );
     await fireEvent.press(await screen.findByTestId('rsvp-button'));
-    expect(await screen.findByText('This meetup has already started and no longer accepts RSVPs')).toBeTruthy();
+    expect(
+      await screen.findByText('This meetup has already started and no longer accepts RSVPs'),
+    ).toBeTruthy();
   });
 });

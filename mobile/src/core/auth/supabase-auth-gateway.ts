@@ -12,7 +12,12 @@ const toSession = (session: Session | null): AuthSession | null =>
  */
 export function createSupabaseAuthGateway(url: string, anonKey: string): AuthGateway {
   const client: SupabaseClient = createClient(url, anonKey, {
-    auth: { storage: AsyncStorage, persistSession: true, autoRefreshToken: true, detectSessionInUrl: false },
+    auth: {
+      storage: AsyncStorage,
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: false,
+    },
   });
 
   // Refresh tokens only while the app is in the foreground.
@@ -41,7 +46,9 @@ export function createSupabaseAuthGateway(url: string, anonKey: string): AuthGat
       await client.auth.signOut();
     },
     onSessionChange(listener) {
-      const { data } = client.auth.onAuthStateChange((_event, session) => listener(toSession(session)));
+      const { data } = client.auth.onAuthStateChange((_event, session) =>
+        listener(toSession(session)),
+      );
       return () => data.subscription.unsubscribe();
     },
     async accessToken() {

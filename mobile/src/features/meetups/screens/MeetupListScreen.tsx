@@ -31,7 +31,13 @@ export function MeetupListScreen({ navigation }: ScreenProps<'Meetups'>) {
   useLayoutEffect(() => {
     navigation.setOptions({
       headerRight: () => (
-        <Pressable onPress={signOut} accessibilityRole="button" accessibilityLabel="Sign out" hitSlop={10} testID="sign-out">
+        <Pressable
+          onPress={signOut}
+          accessibilityRole="button"
+          accessibilityLabel="Sign out"
+          hitSlop={10}
+          testID="sign-out"
+        >
           <Ionicons name="log-out-outline" size={22} color={colors.primary} />
         </Pressable>
       ),
@@ -42,17 +48,32 @@ export function MeetupListScreen({ navigation }: ScreenProps<'Meetups'>) {
     (meetup: MeetupSummary) => navigation.navigate('MeetupDetail', { meetupId: meetup.id }),
     [navigation],
   );
-  const createMeetup = () => selectedGroupId && navigation.navigate('CreateMeetup', { groupId: selectedGroupId });
+  const createMeetup = () =>
+    selectedGroupId && navigation.navigate('CreateMeetup', { groupId: selectedGroupId });
 
   if (groupsQuery.isPending) return <LoadingState message="Loading your groups…" />;
-  if (groupsQuery.isError) return <ErrorState message={messageFor(groupsQuery.error)} onRetry={() => groupsQuery.refetch()} />;
+  if (groupsQuery.isError)
+    return (
+      <ErrorState message={messageFor(groupsQuery.error)} onRetry={() => groupsQuery.refetch()} />
+    );
   if (groupsQuery.data.length === 0) {
-    return <EmptyState title="You’re not in any walking groups yet" message="Once a neighbor adds you to a group, its meetups show up here." />;
+    return (
+      <EmptyState
+        title="You’re not in any walking groups yet"
+        message="Once a neighbor adds you to a group, its meetups show up here."
+      />
+    );
   }
 
   const renderBody = () => {
     if (meetupsQuery.isPending) return <LoadingState message="Loading meetups…" />;
-    if (meetupsQuery.isError) return <ErrorState message={messageFor(meetupsQuery.error)} onRetry={() => meetupsQuery.refetch()} />;
+    if (meetupsQuery.isError)
+      return (
+        <ErrorState
+          message={messageFor(meetupsQuery.error)}
+          onRetry={() => meetupsQuery.refetch()}
+        />
+      );
     return (
       <FlatList
         data={meetupsQuery.data}
@@ -61,7 +82,11 @@ export function MeetupListScreen({ navigation }: ScreenProps<'Meetups'>) {
         contentContainerStyle={meetupsQuery.data.length === 0 ? styles.emptyContainer : styles.list}
         ItemSeparatorComponent={() => <View style={{ height: spacing.md }} />}
         refreshControl={
-          <RefreshControl refreshing={meetupsQuery.isRefetching} onRefresh={() => void meetupsQuery.refetch()} tintColor={colors.primary} />
+          <RefreshControl
+            refreshing={meetupsQuery.isRefetching}
+            onRefresh={() => void meetupsQuery.refetch()}
+            tintColor={colors.primary}
+          />
         }
         ListEmptyComponent={
           <EmptyState
@@ -77,11 +102,20 @@ export function MeetupListScreen({ navigation }: ScreenProps<'Meetups'>) {
 
   return (
     <SafeAreaView style={styles.safe} edges={['bottom']}>
-      <GroupPicker groups={groupsQuery.data} selectedId={selectedGroupId} onSelect={setSelectedGroupId} />
+      <GroupPicker
+        groups={groupsQuery.data}
+        selectedId={selectedGroupId}
+        onSelect={setSelectedGroupId}
+      />
       <Text style={styles.sectionLabel}>Upcoming & recent · soonest first</Text>
       <View style={styles.body}>{renderBody()}</View>
       <View style={styles.footer}>
-        <Button label="New meetup" onPress={createMeetup} disabled={!selectedGroupId} testID="new-meetup-button" />
+        <Button
+          label="New meetup"
+          onPress={createMeetup}
+          disabled={!selectedGroupId}
+          testID="new-meetup-button"
+        />
       </View>
     </SafeAreaView>
   );
@@ -89,9 +123,20 @@ export function MeetupListScreen({ navigation }: ScreenProps<'Meetups'>) {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
-  sectionLabel: { ...typography.caption, color: colors.textMuted, paddingHorizontal: spacing.lg, paddingBottom: spacing.xs },
+  sectionLabel: {
+    ...typography.caption,
+    color: colors.textMuted,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.xs,
+  },
   body: { flex: 1 },
   list: { padding: spacing.lg, paddingTop: spacing.sm },
   emptyContainer: { flexGrow: 1 },
-  footer: { padding: spacing.lg, paddingTop: spacing.sm, borderTopWidth: 1, borderTopColor: colors.border, backgroundColor: colors.background },
+  footer: {
+    padding: spacing.lg,
+    paddingTop: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    backgroundColor: colors.background,
+  },
 });

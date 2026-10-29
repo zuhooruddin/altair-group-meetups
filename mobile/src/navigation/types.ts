@@ -7,4 +7,7 @@ export type RootStackParamList = {
   CreateMeetup: { groupId: string };
 };
 
-export type ScreenProps<Name extends keyof RootStackParamList> = NativeStackScreenProps<RootStackParamList, Name>;
+export type ScreenProps<Name extends keyof RootStackParamList> = NativeStackScreenProps<
+  RootStackParamList,
+  Name
+>;

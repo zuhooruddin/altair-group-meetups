@@ -16,7 +16,12 @@ export class ApiClient {
     private readonly fetchImpl: typeof fetch = fetch,
   ) {}
 
-  async request<S extends z.ZodType>(method: Method, path: string, responseSchema: S, body?: unknown): Promise<z.infer<S>> {
+  async request<S extends z.ZodType>(
+    method: Method,
+    path: string,
+    responseSchema: S,
+    body?: unknown,
+  ): Promise<z.infer<S>> {
     const token = await this.accessToken();
     if (!token) throw new ApiError('UNAUTHENTICATED', 'Please sign in again.', 401);
 
@@ -32,7 +37,11 @@ export class ApiClient {
         ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
       });
     } catch {
-      throw new ApiError('NETWORK', 'Could not reach the server. Check your connection and try again.', 0);
+      throw new ApiError(
+        'NETWORK',
+        'Could not reach the server. Check your connection and try again.',
+        0,
+      );
     }
 
     const payload: unknown = await response.json().catch(() => undefined);
@@ -43,11 +52,16 @@ export class ApiClient {
         const { code, message, issues } = parsed.data.error;
         throw new ApiError(code, message, response.status, issues ?? []);
       }
-      throw new ApiError('BAD_RESPONSE', `Unexpected server response (${response.status}).`, response.status);
+      throw new ApiError(
+        'BAD_RESPONSE',
+        `Unexpected server response (${response.status}).`,
+        response.status,
+      );
     }
 
     const parsed = responseSchema.safeParse(payload);
-    if (!parsed.success) throw new ApiError('BAD_RESPONSE', 'Unexpected response from the server.', response.status);
+    if (!parsed.success)
+      throw new ApiError('BAD_RESPONSE', 'Unexpected response from the server.', response.status);
     return parsed.data;
   }
 }

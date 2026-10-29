@@ -11,7 +11,15 @@ const tones: Record<Tone, { bg: string; fg: string }> = {
 };
 
 /** Inline feedback message (success, error...). Announced by screen readers. */
-export function Banner({ tone, message, testID }: { tone: Tone; message: string; testID?: string }) {
+export function Banner({
+  tone,
+  message,
+  testID,
+}: {
+  tone: Tone;
+  message: string;
+  testID?: string;
+}) {
   const t = tones[tone];
   return (
     <View
@@ -26,6 +34,10 @@ export function Banner({ tone, message, testID }: { tone: Tone; message: string;
 }
 
 const styles = StyleSheet.create({
-  banner: { borderRadius: radius.md, paddingHorizontal: spacing.md, paddingVertical: spacing.sm + 2 },
+  banner: {
+    borderRadius: radius.md,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm + 2,
+  },
   text: { ...typography.body, fontSize: 14 },
 });

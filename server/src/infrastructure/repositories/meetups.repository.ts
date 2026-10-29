@@ -60,7 +60,11 @@ function toRecord(row: MeetupRow): MeetupRecord {
     },
     exactPoint:
       row.place_name !== null && row.latitude !== null && row.longitude !== null
-        ? { placeName: row.place_name, latitude: Number(row.latitude), longitude: Number(row.longitude) }
+        ? {
+            placeName: row.place_name,
+            latitude: Number(row.latitude),
+            longitude: Number(row.longitude),
+          }
         : null,
     hasStarted: row.has_started,
     attendeeCount: Number(row.attendee_count),
@@ -80,7 +84,9 @@ export class PgMeetupRepository implements MeetupRepository {
   }
 
   async findVisible(meetupId: string): Promise<MeetupRecord | null> {
-    const { rows } = await this.db.query<MeetupRow>(`${SELECT_MEETUPS} where m.id = $1`, [meetupId]);
+    const { rows } = await this.db.query<MeetupRow>(`${SELECT_MEETUPS} where m.id = $1`, [
+      meetupId,
+    ]);
     return rows[0] ? toRecord(rows[0]) : null;
   }
 
@@ -95,7 +101,14 @@ export class PgMeetupRepository implements MeetupRepository {
                 p_place_name => $4,
                 p_latitude   => $5,
                 p_longitude  => $6) as id`,
-      [input.groupId, input.title, input.startsAt.toISOString(), input.placeName, input.latitude, input.longitude],
+      [
+        input.groupId,
+        input.title,
+        input.startsAt.toISOString(),
+        input.placeName,
+        input.latitude,
+        input.longitude,
+      ],
     );
     const id = rows[0]?.id;
     if (!id) throw new Error('insert_meetup returned no id');

@@ -34,7 +34,10 @@ function useApplyMeetupDetail() {
 export function useCreateMeetup() {
   const { meetups } = useServices();
   const apply = useApplyMeetupDetail();
-  return useMutation({ mutationFn: (input: CreateMeetupRequest) => meetups.create(input), onSuccess: apply });
+  return useMutation({
+    mutationFn: (input: CreateMeetupRequest) => meetups.create(input),
+    onSuccess: apply,
+  });
 }
 
 export function useCancelMeetup(meetupId: string) {

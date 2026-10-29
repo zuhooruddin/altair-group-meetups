@@ -7,14 +7,19 @@ const groups = [{ id: MAPLE, name: 'Maple Street Walkers' }];
 
 const renderCreate = (services: ReturnType<typeof fakeServices>, navigation = fakeNavigation()) =>
   renderWithServices(
-    <CreateMeetupScreen route={{ key: 'c', name: 'CreateMeetup', params: { groupId: MAPLE } }} navigation={navigation} />,
+    <CreateMeetupScreen
+      route={{ key: 'c', name: 'CreateMeetup', params: { groupId: MAPLE } }}
+      navigation={navigation}
+    />,
     services,
   );
 
 describe('CreateMeetupScreen', () => {
   it('validates with the shared contract before calling the server', async () => {
     const create = jest.fn();
-    await renderCreate(fakeServices({ groups: { listMine: async () => groups }, meetups: { create } }));
+    await renderCreate(
+      fakeServices({ groups: { listMine: async () => groups }, meetups: { create } }),
+    );
     await fireEvent.press(screen.getByTestId('create-submit'));
     expect(await screen.findByText('Title is required')).toBeTruthy();
     expect(screen.getByText('Meeting point name is required')).toBeTruthy();
@@ -24,7 +29,10 @@ describe('CreateMeetupScreen', () => {
   it('submits a trimmed, contract-shaped request and opens the new meetup', async () => {
     const create = jest.fn(async () => detail({ id: 'c3000000-0000-4000-8000-0000000000aa' }));
     const navigation = fakeNavigation() as unknown as { replace: jest.Mock };
-    await renderCreate(fakeServices({ groups: { listMine: async () => groups }, meetups: { create } }), navigation as never);
+    await renderCreate(
+      fakeServices({ groups: { listMine: async () => groups }, meetups: { create } }),
+      navigation as never,
+    );
 
     await fireEvent.changeText(screen.getByTestId('title-input'), '  Evening stroll  ');
     await fireEvent.press(screen.getByTestId('use-spare-place'));
@@ -35,21 +43,32 @@ describe('CreateMeetupScreen', () => {
     expect(sent).toMatchObject({
       groupId: MAPLE,
       title: 'Evening stroll',
-      meetingPoint: { placeName: 'Fountain plaza, Town Green', latitude: 39.999134, longitude: -99.999461 },
+      meetingPoint: {
+        placeName: 'Fountain plaza, Town Green',
+        latitude: 39.999134,
+        longitude: -99.999461,
+      },
     });
     expect(sent).not.toHaveProperty('createdBy');
     await waitFor(() =>
-      expect(navigation.replace).toHaveBeenCalledWith('MeetupDetail', { meetupId: 'c3000000-0000-4000-8000-0000000000aa', flash: 'created' }),
+      expect(navigation.replace).toHaveBeenCalledWith('MeetupDetail', {
+        meetupId: 'c3000000-0000-4000-8000-0000000000aa',
+        flash: 'created',
+      }),
     );
   });
 
   it('shows server validation errors next to the fields', async () => {
     const create = jest.fn(async () =>
       Promise.reject(
-        new ApiError('VALIDATION_FAILED', 'Invalid meetup', 400, [{ path: 'startsAt', message: 'Start time must be in the future' }]),
+        new ApiError('VALIDATION_FAILED', 'Invalid meetup', 400, [
+          { path: 'startsAt', message: 'Start time must be in the future' },
+        ]),
       ),
     );
-    await renderCreate(fakeServices({ groups: { listMine: async () => groups }, meetups: { create } }));
+    await renderCreate(
+      fakeServices({ groups: { listMine: async () => groups }, meetups: { create } }),
+    );
     await fireEvent.changeText(screen.getByTestId('title-input'), 'Evening stroll');
     await fireEvent.press(screen.getByTestId('use-spare-place'));
     await fireEvent.press(screen.getByTestId('create-submit'));
@@ -59,7 +78,9 @@ describe('CreateMeetupScreen', () => {
 
   it('rejects out-of-range coordinates typed by hand', async () => {
     const create = jest.fn();
-    await renderCreate(fakeServices({ groups: { listMine: async () => groups }, meetups: { create } }));
+    await renderCreate(
+      fakeServices({ groups: { listMine: async () => groups }, meetups: { create } }),
+    );
     await fireEvent.changeText(screen.getByTestId('title-input'), 'Evening stroll');
     await fireEvent.changeText(screen.getByTestId('place-input'), 'Somewhere');
     await fireEvent.changeText(screen.getByTestId('lat-input'), '123');

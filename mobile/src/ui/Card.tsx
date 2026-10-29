@@ -11,7 +11,12 @@ interface CardProps {
 }
 
 export function Card({ children, onPress, style, accessibilityLabel, testID }: CardProps) {
-  if (!onPress) return <View style={[styles.card, style]} testID={testID}>{children}</View>;
+  if (!onPress)
+    return (
+      <View style={[styles.card, style]} testID={testID}>
+        {children}
+      </View>
+    );
   return (
     <Pressable
       accessibilityRole="button"

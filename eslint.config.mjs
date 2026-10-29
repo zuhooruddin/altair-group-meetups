@@ -20,14 +20,30 @@ export default tseslint.config(
   ...tseslint.configs.recommended,
   {
     rules: {
-      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-unused-vars': [
+        'error',
+        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
+      ],
       '@typescript-eslint/consistent-type-imports': 'error',
       'no-console': ['error', { allow: ['warn', 'error'] }],
     },
   },
   {
-    files: ['**/test/**', '**/*.test.ts', '**/*.test.tsx', 'scripts/**'],
+    files: ['**/test/**', '**/*.test.ts', '**/*.test.tsx', '**/scripts/**'],
     rules: { 'no-console': 'off' },
+  },
+  {
+    files: ['scripts/**/*.mjs'],
+    languageOptions: { globals: { process: 'readonly', console: 'readonly' } },
+  },
+  {
+    // Testing Library 14 renders and fires events asynchronously: an un-awaited
+    // render/fireEvent silently tests nothing. Make that a lint error.
+    files: ['mobile/test/**/*.{ts,tsx}'],
+    languageOptions: {
+      parserOptions: { projectService: true, tsconfigRootDir: import.meta.dirname },
+    },
+    rules: { '@typescript-eslint/no-floating-promises': 'error' },
   },
   prettier,
 );

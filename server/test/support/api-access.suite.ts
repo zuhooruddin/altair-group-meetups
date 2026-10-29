@@ -40,11 +40,20 @@ export function describeApiAccess(environment: string, createHarness: () => Prom
       await h.resetData();
     });
 
-    async function call(persona: Persona | null, method: Method, url: string, payload?: unknown, headers: Record<string, string> = {}) {
+    async function call(
+      persona: Persona | null,
+      method: Method,
+      url: string,
+      payload?: unknown,
+      headers: Record<string, string> = {},
+    ) {
       const res = await h.app.inject({
         method,
         url,
-        headers: { ...(persona ? { authorization: `Bearer ${await h.tokenFor(persona)}` } : {}), ...headers },
+        headers: {
+          ...(persona ? { authorization: `Bearer ${await h.tokenFor(persona)}` } : {}),
+          ...headers,
+        },
         ...(payload !== undefined ? { payload: payload as Record<string, unknown> } : {}),
       });
       const body = res.body ? JSON.parse(res.body) : undefined;
@@ -62,13 +71,17 @@ export function describeApiAccess(environment: string, createHarness: () => Prom
       ...overrides,
     });
 
-    async function createAs(persona: Persona, overrides: Record<string, unknown> = {}): Promise<MeetupDetail> {
+    async function createAs(
+      persona: Persona,
+      overrides: Record<string, unknown> = {},
+    ): Promise<MeetupDetail> {
       const res = await call(persona, 'POST', '/v1/meetups', createBody(overrides));
       expect(res.status, JSON.stringify(res.body)).toBe(201);
       return res.body.meetup as MeetupDetail;
     }
 
-    const detail = async (persona: Persona, meetupId: string) => call(persona, 'GET', `/v1/meetups/${meetupId}`);
+    const detail = async (persona: Persona, meetupId: string) =>
+      call(persona, 'GET', `/v1/meetups/${meetupId}`);
 
     // -----------------------------------------------------------------
     describe('authentication', () => {
@@ -81,19 +94,28 @@ export function describeApiAccess(environment: string, createHarness: () => Prom
         ['PUT', `/v1/meetups/${meetups.saturdayLoop}/rsvp`],
         ['DELETE', `/v1/meetups/${meetups.saturdayLoop}/rsvp`],
       ] as const)('%s %s without a token -> 401', async (method, url) => {
-        const res = await call(null, method, url, method === 'POST' && url === '/v1/meetups' ? createBody() : undefined);
+        const res = await call(
+          null,
+          method,
+          url,
+          method === 'POST' && url === '/v1/meetups' ? createBody() : undefined,
+        );
         expect(res.status).toBe(401);
         expect(res.body.error.code).toBe('UNAUTHENTICATED');
       });
 
       it('rejects an invalid token', async () => {
-        const res = await call(null, 'GET', '/v1/me/groups', undefined, { authorization: 'Bearer not-a-real-token' });
+        const res = await call(null, 'GET', '/v1/me/groups', undefined, {
+          authorization: 'Bearer not-a-real-token',
+        });
         expect(res.status).toBe(401);
         expect(res.body.error.code).toBe('UNAUTHENTICATED');
       });
 
       it('rejects a malformed Authorization header', async () => {
-        const res = await call(null, 'GET', '/v1/me/groups', undefined, { authorization: 'Basic abc' });
+        const res = await call(null, 'GET', '/v1/me/groups', undefined, {
+          authorization: 'Basic abc',
+        });
         expect(res.status).toBe(401);
       });
 
@@ -112,7 +134,9 @@ export function describeApiAccess(environment: string, createHarness: () => Prom
       ] as const)('%s sees only their own groups', async (persona, expected) => {
         const res = await call(persona, 'GET', '/v1/me/groups');
         expect(res.status).toBe(200);
-        expect(res.body.groups.map((g: { id: string }) => g.id).sort()).toEqual([...expected].sort());
+        expect(res.body.groups.map((g: { id: string }) => g.id).sort()).toEqual(
+          [...expected].sort(),
+        );
       });
     });
 
@@ -134,7 +158,11 @@ export function describeApiAccess(environment: string, createHarness: () => Prom
 
       it("gets the same 404 for a real meetup as for one that doesn't exist", async () => {
         const real = await call('taylor', 'GET', `/v1/meetups/${meetups.saturdayLoop}`);
-        const fake = await call('taylor', 'GET', '/v1/meetups/c3000000-0000-4000-8000-0000000000ff');
+        const fake = await call(
+          'taylor',
+          'GET',
+          '/v1/meetups/c3000000-0000-4000-8000-0000000000ff',
+        );
         expect(real).toEqual(fake);
       });
 
@@ -186,9 +214,16 @@ export function describeApiAccess(environment: string, createHarness: () => Prom
         expect(res.status).toBe(200);
         const m = res.body.meetup as MeetupDetail;
         expect(m.title).toBe('Saturday morning loop');
-        expect(m.attendees.map((a) => a.displayName)).toEqual(expect.arrayContaining(['Jordan Price', 'Riley Chen']));
+        expect(m.attendees.map((a) => a.displayName)).toEqual(
+          expect.arrayContaining(['Jordan Price', 'Riley Chen']),
+        );
         expect(m.attendees).toHaveLength(2);
-        expect(m.viewer).toMatchObject({ isCreator: false, isAttending: false, canRsvp: true, canCancel: false });
+        expect(m.viewer).toMatchObject({
+          isCreator: false,
+          isAttending: false,
+          canRsvp: true,
+          canCancel: false,
+        });
         expect(m.meetingPoint.visibility).toBe('approximate');
         if (m.meetingPoint.visibility !== 'approximate') return;
         expect(m.meetingPoint.radiusMeters).toBeGreaterThanOrEqual(300);
@@ -204,7 +239,11 @@ export function describeApiAccess(environment: string, createHarness: () => Prom
       it('attendees endpoint returns names only', async () => {
         const res = await call('sam', 'GET', `/v1/meetups/${meetups.saturdayLoop}/attendees`);
         expect(res.status).toBe(200);
-        expect(Object.keys(res.body.attendees[0]).sort()).toEqual(['displayName', 'rsvpAt', 'userId']);
+        expect(Object.keys(res.body.attendees[0]).sort()).toEqual([
+          'displayName',
+          'rsvpAt',
+          'userId',
+        ]);
       });
 
       it('cannot cancel someone else’s meetup', async () => {
@@ -232,7 +271,9 @@ export function describeApiAccess(environment: string, createHarness: () => Prom
         const withdraw = await call('sam', 'DELETE', `/v1/meetups/${meetups.saturdayLoop}/rsvp`);
         expect(withdraw.status).toBe(200);
         expect(withdraw.body.meetup.viewer.isAttending).toBe(false);
-        expect(withdraw.body.meetup.attendees.map((a: { userId: string }) => a.userId)).not.toContain(users.sam);
+        expect(
+          withdraw.body.meetup.attendees.map((a: { userId: string }) => a.userId),
+        ).not.toContain(users.sam);
         expect(withdraw.body.meetup.meetingPoint.visibility).toBe('approximate');
         expectNoExactPoint(withdraw.body, exactPoints.saturdayLoop);
       });
@@ -243,7 +284,9 @@ export function describeApiAccess(environment: string, createHarness: () => Prom
         expect(first.status).toBe(200);
         expect(second.status).toBe(200);
         expect(second.body.meetup.attendeeCount).toBe(1);
-        expect(second.body.meetup.attendees.filter((a: { userId: string }) => a.userId === users.sam)).toHaveLength(1);
+        expect(
+          second.body.meetup.attendees.filter((a: { userId: string }) => a.userId === users.sam),
+        ).toHaveLength(1);
       });
 
       it('withdrawing without an RSVP is a harmless no-op', async () => {
@@ -257,8 +300,15 @@ export function describeApiAccess(environment: string, createHarness: () => Prom
     describe('member who has RSVPd (Jordan on Saturday)', () => {
       it('sees the exact meeting point and place name', async () => {
         const res = await detail('jordan', meetups.saturdayLoop);
-        expect(res.body.meetup.meetingPoint).toEqual({ visibility: 'exact', ...exactPoints.saturdayLoop });
-        expect(res.body.meetup.viewer).toMatchObject({ isAttending: true, canRsvp: false, canCancel: false });
+        expect(res.body.meetup.meetingPoint).toEqual({
+          visibility: 'exact',
+          ...exactPoints.saturdayLoop,
+        });
+        expect(res.body.meetup.viewer).toMatchObject({
+          isAttending: true,
+          canRsvp: false,
+          canCancel: false,
+        });
       });
 
       it('cannot cancel a meetup they only attend', async () => {
@@ -270,7 +320,9 @@ export function describeApiAccess(environment: string, createHarness: () => Prom
       it("withdrawing removes only their own RSVP (Riley's stays)", async () => {
         const res = await call('jordan', 'DELETE', `/v1/meetups/${meetups.saturdayLoop}/rsvp`);
         expect(res.status).toBe(200);
-        expect(res.body.meetup.attendees.map((a: { userId: string }) => a.userId)).toEqual([users.riley]);
+        expect(res.body.meetup.attendees.map((a: { userId: string }) => a.userId)).toEqual([
+          users.riley,
+        ]);
       });
     });
 
@@ -278,8 +330,15 @@ export function describeApiAccess(environment: string, createHarness: () => Prom
     describe('creator (Avery)', () => {
       it('sees the exact point of their own meetup without RSVPing', async () => {
         const res = await detail('avery', meetups.saturdayLoop);
-        expect(res.body.meetup.meetingPoint).toEqual({ visibility: 'exact', ...exactPoints.saturdayLoop });
-        expect(res.body.meetup.viewer).toMatchObject({ isCreator: true, isAttending: false, canCancel: true });
+        expect(res.body.meetup.meetingPoint).toEqual({
+          visibility: 'exact',
+          ...exactPoints.saturdayLoop,
+        });
+        expect(res.body.meetup.viewer).toMatchObject({
+          isCreator: true,
+          isAttending: false,
+          canCancel: true,
+        });
       });
 
       it('creating a meetup: creator from the session, title trimmed, exact for the creator', async () => {
@@ -296,8 +355,14 @@ export function describeApiAccess(environment: string, createHarness: () => Prom
       });
 
       it('lists in start-time order, including new meetups', async () => {
-        const later = await createAs('avery', { title: `${TEST_TITLE_PREFIX} later`, startsAt: inDays(30) });
-        const sooner = await createAs('avery', { title: `${TEST_TITLE_PREFIX} sooner`, startsAt: inDays(1) });
+        const later = await createAs('avery', {
+          title: `${TEST_TITLE_PREFIX} later`,
+          startsAt: inDays(30),
+        });
+        const sooner = await createAs('avery', {
+          title: `${TEST_TITLE_PREFIX} sooner`,
+          startsAt: inDays(1),
+        });
         const res = await call('sam', 'GET', `/v1/groups/${groups.maple}/meetups`);
         expect(res.body.meetups.map((m: MeetupSummary) => m.id)).toEqual([
           sooner.id,
@@ -344,7 +409,10 @@ export function describeApiAccess(environment: string, createHarness: () => Prom
         expect(again.status).toBe(200);
         expect(again.body.meetup.status).toBe('cancelled');
         await expect(
-          h.ownerExec(`update public.meetups set status = 'scheduled', cancelled_at = null where id = $1`, [created.id]),
+          h.ownerExec(
+            `update public.meetups set status = 'scheduled', cancelled_at = null where id = $1`,
+            [created.id],
+          ),
         ).rejects.toMatchObject({ code: 'AL004' });
 
         // Outsider still sees nothing.
@@ -356,7 +424,10 @@ export function describeApiAccess(environment: string, createHarness: () => Prom
     describe('started meetup', () => {
       it('accepts no RSVP once it has started', async () => {
         const created = await createAs('avery');
-        await h.ownerExec(`update public.meetups set starts_at = now() - interval '1 minute' where id = $1`, [created.id]);
+        await h.ownerExec(
+          `update public.meetups set starts_at = now() - interval '1 minute' where id = $1`,
+          [created.id],
+        );
         const view = await detail('sam', created.id);
         expect(view.body.meetup.viewer.canRsvp).toBe(false);
         const res = await call('sam', 'PUT', `/v1/meetups/${created.id}/rsvp`);
@@ -370,7 +441,10 @@ export function describeApiAccess(environment: string, createHarness: () => Prom
       it('Maple list: Saturday exact (RSVPd), Weeknight approximate', async () => {
         const res = await call('riley', 'GET', `/v1/groups/${groups.maple}/meetups`);
         const byId = new Map((res.body.meetups as MeetupSummary[]).map((m) => [m.id, m]));
-        expect(byId.get(meetups.saturdayLoop)?.meetingPoint).toEqual({ visibility: 'exact', ...exactPoints.saturdayLoop });
+        expect(byId.get(meetups.saturdayLoop)?.meetingPoint).toEqual({
+          visibility: 'exact',
+          ...exactPoints.saturdayLoop,
+        });
         expect(byId.get(meetups.weeknightWalk)?.meetingPoint.visibility).toBe('approximate');
         expectNoExactPoint(byId.get(meetups.weeknightWalk), exactPoints.weeknightWalk);
       });
@@ -378,7 +452,9 @@ export function describeApiAccess(environment: string, createHarness: () => Prom
       it('Riverside list: sunrise walk approximate (membership there grants no exact access)', async () => {
         const res = await call('riley', 'GET', `/v1/groups/${groups.riverside}/meetups`);
         expect(res.status).toBe(200);
-        expect(res.body.meetups.map((m: MeetupSummary) => m.id)).toEqual([meetups.riversideSunrise]);
+        expect(res.body.meetups.map((m: MeetupSummary) => m.id)).toEqual([
+          meetups.riversideSunrise,
+        ]);
         expect(res.body.meetups[0].meetingPoint.visibility).toBe('approximate');
         expectNoExactPoint(res.body, exactPoints.riversideSunrise);
       });
@@ -392,7 +468,9 @@ export function describeApiAccess(environment: string, createHarness: () => Prom
           [meetups.saturdayLoop]: 'exact',
           [meetups.weeknightWalk]: 'approximate',
         });
-        expect(visibility(riverside.body.items)).toEqual({ [meetups.riversideSunrise]: 'approximate' });
+        expect(visibility(riverside.body.items)).toEqual({
+          [meetups.riversideSunrise]: 'approximate',
+        });
         expectNoExactPoint(riverside.body, exactPoints.riversideSunrise);
         expectNoExactPoint(maple.body.items[1], exactPoints.weeknightWalk);
       });
@@ -400,17 +478,23 @@ export function describeApiAccess(environment: string, createHarness: () => Prom
       it('RSVPing in Riverside then reveals that point, and only that one', async () => {
         await call('riley', 'PUT', `/v1/meetups/${meetups.riversideSunrise}/rsvp`);
         const riverside = await call('riley', 'GET', `/v1/groups/${groups.riverside}/map`);
-        expect(riverside.body.items[0].meetingPoint).toEqual({ visibility: 'exact', ...exactPoints.riversideSunrise });
+        expect(riverside.body.items[0].meetingPoint).toEqual({
+          visibility: 'exact',
+          ...exactPoints.riversideSunrise,
+        });
         const maple = await call('riley', 'GET', `/v1/groups/${groups.maple}/map`);
-        expect(maple.body.items.find((i: { meetupId: string }) => i.meetupId === meetups.weeknightWalk).meetingPoint.visibility).toBe(
-          'approximate',
-        );
+        expect(
+          maple.body.items.find((i: { meetupId: string }) => i.meetupId === meetups.weeknightWalk)
+            .meetingPoint.visibility,
+        ).toBe('approximate');
       });
 
       it('a single-group member cannot reach the other group (Quinn -> Maple)', async () => {
         expect((await call('quinn', 'GET', `/v1/groups/${groups.maple}/meetups`)).status).toBe(404);
         expect((await call('quinn', 'GET', `/v1/groups/${groups.maple}/map`)).status).toBe(404);
-        expect((await call('quinn', 'PUT', `/v1/meetups/${meetups.saturdayLoop}/rsvp`)).status).toBe(404);
+        expect(
+          (await call('quinn', 'PUT', `/v1/meetups/${meetups.saturdayLoop}/rsvp`)).status,
+        ).toBe(404);
         expect((await call('quinn', 'POST', '/v1/meetups', createBody())).status).toBe(404);
       });
     });
@@ -442,7 +526,10 @@ export function describeApiAccess(environment: string, createHarness: () => Prom
         const res = await h.app.inject({
           method: 'POST',
           url: '/v1/meetups',
-          headers: { authorization: `Bearer ${await h.tokenFor('sam')}`, 'content-type': 'application/json' },
+          headers: {
+            authorization: `Bearer ${await h.tokenFor('sam')}`,
+            'content-type': 'application/json',
+          },
           payload: '{"title": ',
         });
         expect(res.statusCode).toBe(400);
@@ -460,7 +547,9 @@ export function describeApiAccess(environment: string, createHarness: () => Prom
       });
 
       it('rejects an unexpected body on RSVP (e.g. trying to RSVP someone else)', async () => {
-        const res = await call('sam', 'PUT', `/v1/meetups/${meetups.weeknightWalk}/rsvp`, { userId: users.jordan });
+        const res = await call('sam', 'PUT', `/v1/meetups/${meetups.weeknightWalk}/rsvp`, {
+          userId: users.jordan,
+        });
         expect(res.status).toBe(400);
         expect((await detail('jordan', meetups.weeknightWalk)).body.meetup.attendeeCount).toBe(0);
       });

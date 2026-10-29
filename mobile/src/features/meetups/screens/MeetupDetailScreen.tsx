@@ -23,21 +23,32 @@ export function MeetupDetailScreen({ route }: ScreenProps<'MeetupDetail'>) {
   const query = useMeetupDetail(meetupId);
   const currentUserId = useCurrentUserId();
   const [feedback, setFeedback] = useState<Feedback>(
-    flash === 'created' ? { tone: 'success', message: 'Meetup created. Your group can see it now.' } : null,
+    flash === 'created'
+      ? { tone: 'success', message: 'Meetup created. Your group can see it now.' }
+      : null,
   );
 
   if (query.isPending) return <LoadingState message="Loading meetup…" />;
-  if (query.isError) return <ErrorState message={messageFor(query.error)} onRetry={() => query.refetch()} />;
+  if (query.isError)
+    return <ErrorState message={messageFor(query.error)} onRetry={() => query.refetch()} />;
 
   return (
     <ScrollView
       style={styles.screen}
       contentContainerStyle={styles.content}
-      refreshControl={<RefreshControl refreshing={query.isRefetching} onRefresh={() => void query.refetch()} tintColor={colors.primary} />}
+      refreshControl={
+        <RefreshControl
+          refreshing={query.isRefetching}
+          onRefresh={() => void query.refetch()}
+          tintColor={colors.primary}
+        />
+      }
       testID="meetup-detail"
     >
       <MeetupHeader meetup={query.data} />
-      {feedback ? <Banner tone={feedback.tone} message={feedback.message} testID="detail-feedback" /> : null}
+      {feedback ? (
+        <Banner tone={feedback.tone} message={feedback.message} testID="detail-feedback" />
+      ) : null}
       <MeetingPointSection meetup={query.data} />
       <RsvpSection meetup={query.data} onFeedback={setFeedback} />
       <Card>
@@ -46,7 +57,9 @@ export function MeetupDetailScreen({ route }: ScreenProps<'MeetupDetail'>) {
         </Text>
         <AttendeeList attendees={query.data.attendees} currentUserId={currentUserId} />
       </Card>
-      {query.data.viewer.canCancel ? <CancelSection meetup={query.data} onFeedback={setFeedback} /> : null}
+      {query.data.viewer.canCancel ? (
+        <CancelSection meetup={query.data} onFeedback={setFeedback} />
+      ) : null}
     </ScrollView>
   );
 }
@@ -56,7 +69,11 @@ function MeetupHeader({ meetup }: { meetup: MeetupDetail }) {
   return (
     <View style={styles.header}>
       <View style={styles.badges}>
-        {cancelled ? <Badge label="Cancelled" tone="warning" /> : <Badge label="Scheduled" tone="neutral" />}
+        {cancelled ? (
+          <Badge label="Cancelled" tone="warning" />
+        ) : (
+          <Badge label="Scheduled" tone="neutral" />
+        )}
         {meetup.viewer.isCreator ? <Badge label="Your meetup" tone="accent" /> : null}
       </View>
       <Text style={[styles.title, cancelled && styles.struck]} testID="detail-title">
@@ -68,10 +85,16 @@ function MeetupHeader({ meetup }: { meetup: MeetupDetail }) {
       </View>
       <View style={styles.metaRow}>
         <Ionicons name="person-outline" size={16} color={colors.textMuted} />
-        <Text style={styles.meta}>{meetup.viewer.isCreator ? 'You’re hosting' : `Hosted by ${meetup.creator.displayName}`}</Text>
+        <Text style={styles.meta}>
+          {meetup.viewer.isCreator ? 'You’re hosting' : `Hosted by ${meetup.creator.displayName}`}
+        </Text>
       </View>
       {cancelled ? (
-        <Banner tone="warning" message="This meetup was cancelled by its host. It no longer accepts RSVPs." testID="cancelled-banner" />
+        <Banner
+          tone="warning"
+          message="This meetup was cancelled by its host. It no longer accepts RSVPs."
+          testID="cancelled-banner"
+        />
       ) : null}
     </View>
   );
@@ -94,8 +117,8 @@ function MeetingPointSection({ meetup }: { meetup: MeetupDetail }) {
         <View style={styles.pointInfo} testID="approximate-point-info">
           <Text style={styles.placeName}>Somewhere in the highlighted area</Text>
           <Text style={styles.muted}>
-            The exact spot and place name are shared with members who RSVP. This keeps where neighbors gather private to the
-            people actually coming.
+            The exact spot and place name are shared with members who RSVP. This keeps where
+            neighbors gather private to the people actually coming.
           </Text>
         </View>
       )}
@@ -103,14 +126,24 @@ function MeetingPointSection({ meetup }: { meetup: MeetupDetail }) {
   );
 }
 
-function RsvpSection({ meetup, onFeedback }: { meetup: MeetupDetail; onFeedback: (f: Feedback) => void }) {
+function RsvpSection({
+  meetup,
+  onFeedback,
+}: {
+  meetup: MeetupDetail;
+  onFeedback: (f: Feedback) => void;
+}) {
   const rsvp = useRsvp(meetup.id);
   const withdraw = useWithdrawRsvp(meetup.id);
   const { viewer } = meetup;
 
   const doRsvp = () =>
     rsvp.mutate(undefined, {
-      onSuccess: () => onFeedback({ tone: 'success', message: 'You’re going! The exact meeting point is now on the map.' }),
+      onSuccess: () =>
+        onFeedback({
+          tone: 'success',
+          message: 'You’re going! The exact meeting point is now on the map.',
+        }),
       onError: (e) => onFeedback({ tone: 'error', message: messageFor(e) }),
     });
   const doWithdraw = () =>
@@ -132,16 +165,35 @@ function RsvpSection({ meetup, onFeedback }: { meetup: MeetupDetail; onFeedback:
         {status}
       </Text>
       <View style={styles.actions}>
-        {viewer.canRsvp ? <Button label="RSVP — I’m going" onPress={doRsvp} loading={rsvp.isPending} testID="rsvp-button" /> : null}
+        {viewer.canRsvp ? (
+          <Button
+            label="RSVP — I’m going"
+            onPress={doRsvp}
+            loading={rsvp.isPending}
+            testID="rsvp-button"
+          />
+        ) : null}
         {viewer.isAttending ? (
-          <Button label="Withdraw RSVP" variant="secondary" onPress={doWithdraw} loading={withdraw.isPending} testID="withdraw-button" />
+          <Button
+            label="Withdraw RSVP"
+            variant="secondary"
+            onPress={doWithdraw}
+            loading={withdraw.isPending}
+            testID="withdraw-button"
+          />
         ) : null}
       </View>
     </Card>
   );
 }
 
-function CancelSection({ meetup, onFeedback }: { meetup: MeetupDetail; onFeedback: (f: Feedback) => void }) {
+function CancelSection({
+  meetup,
+  onFeedback,
+}: {
+  meetup: MeetupDetail;
+  onFeedback: (f: Feedback) => void;
+}) {
   const cancel = useCancelMeetup(meetup.id);
   const confirm = () =>
     Alert.alert(
@@ -163,7 +215,13 @@ function CancelSection({ meetup, onFeedback }: { meetup: MeetupDetail; onFeedbac
     );
   return (
     <View style={styles.cancelArea}>
-      <Button label="Cancel meetup" variant="danger" onPress={confirm} loading={cancel.isPending} testID="cancel-button" />
+      <Button
+        label="Cancel meetup"
+        variant="danger"
+        onPress={confirm}
+        loading={cancel.isPending}
+        testID="cancel-button"
+      />
       <Text style={styles.cancelHint}>Only you, as the host, can cancel.</Text>
     </View>
   );

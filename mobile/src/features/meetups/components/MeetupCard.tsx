@@ -15,7 +15,9 @@ interface Props {
 function MeetupCardView({ meetup, onPress }: Props) {
   const cancelled = meetup.status === 'cancelled';
   const location =
-    meetup.meetingPoint.visibility === 'exact' ? meetup.meetingPoint.placeName : 'Approximate area · RSVP to see the spot';
+    meetup.meetingPoint.visibility === 'exact'
+      ? meetup.meetingPoint.placeName
+      : 'Approximate area · RSVP to see the spot';
 
   return (
     <Card
@@ -35,7 +37,11 @@ function MeetupCardView({ meetup, onPress }: Props) {
           </Text>
           <View style={styles.meta}>
             <Ionicons
-              name={meetup.meetingPoint.visibility === 'exact' ? 'location-outline' : 'scan-circle-outline'}
+              name={
+                meetup.meetingPoint.visibility === 'exact'
+                  ? 'location-outline'
+                  : 'scan-circle-outline'
+              }
               size={14}
               color={colors.textMuted}
             />
@@ -44,7 +50,11 @@ function MeetupCardView({ meetup, onPress }: Props) {
             </Text>
           </View>
           <View style={styles.badges}>
-            {cancelled ? <Badge label="Cancelled" tone="warning" /> : <Badge label="Scheduled" tone="neutral" />}
+            {cancelled ? (
+              <Badge label="Cancelled" tone="warning" />
+            ) : (
+              <Badge label="Scheduled" tone="neutral" />
+            )}
             {meetup.viewer.isCreator ? <Badge label="Your meetup" tone="accent" /> : null}
             {meetup.viewer.isAttending ? <Badge label="You’re going" tone="success" /> : null}
             <Text style={styles.count}>{pluralize(meetup.attendeeCount, 'going', 'going')}</Text>

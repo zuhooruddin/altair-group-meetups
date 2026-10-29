@@ -1,4 +1,7 @@
-import DateTimePicker, { DateTimePickerAndroid, type DateTimePickerEvent } from '@react-native-community/datetimepicker';
+import DateTimePicker, {
+  DateTimePickerAndroid,
+  type DateTimePickerEvent,
+} from '@react-native-community/datetimepicker';
 import { Platform, Pressable, StyleSheet, Text, View } from 'react-native';
 import { colors, radius, spacing, typography } from '../../../ui/theme';
 import { formatDay, formatTime } from '../format';
@@ -21,7 +24,8 @@ export function DateTimeField({ label, value, onChange, error }: Props) {
       onChange: (event: DateTimePickerEvent, picked?: Date) => {
         if (event.type !== 'set' || !picked) return;
         const next = new Date(value);
-        if (mode === 'date') next.setFullYear(picked.getFullYear(), picked.getMonth(), picked.getDate());
+        if (mode === 'date')
+          next.setFullYear(picked.getFullYear(), picked.getMonth(), picked.getDate());
         else next.setHours(picked.getHours(), picked.getMinutes(), 0, 0);
         onChange(next);
       },

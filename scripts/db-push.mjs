@@ -18,6 +18,10 @@ if (!process.env.DATABASE_URL) {
 const result = spawnSync(
   'npx',
   ['supabase', 'db', 'push', '--db-url', process.env.DATABASE_URL, ...process.argv.slice(2)],
-  { stdio: 'inherit', shell: process.platform === 'win32', cwd: resolve(import.meta.dirname, '..') },
+  {
+    stdio: 'inherit',
+    shell: process.platform === 'win32',
+    cwd: resolve(import.meta.dirname, '..'),
+  },
 );
 process.exit(result.status ?? 1);

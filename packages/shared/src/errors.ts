@@ -18,9 +18,7 @@ export const apiErrorBodySchema = z.object({
   error: z.object({
     code: apiErrorCodeSchema,
     message: z.string(),
-    issues: z
-      .array(z.object({ path: z.string(), message: z.string() }))
-      .optional(),
+    issues: z.array(z.object({ path: z.string(), message: z.string() })).optional(),
   }),
 });
 export type ApiErrorBody = z.infer<typeof apiErrorBodySchema>;

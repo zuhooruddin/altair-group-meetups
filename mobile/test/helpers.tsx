@@ -23,7 +23,10 @@ export function fakeAuth(userId = SAM): AuthGateway {
   };
 }
 
-export function fakeServices(overrides: Partial<{ [K in keyof AppServices]: Partial<AppServices[K]> }> = {}, userId = SAM): AppServices {
+export function fakeServices(
+  overrides: Partial<{ [K in keyof AppServices]: Partial<AppServices[K]> }> = {},
+  userId = SAM,
+): AppServices {
   const reject = () => Promise.reject(new Error('not stubbed'));
   return {
     auth: { ...fakeAuth(userId), ...overrides.auth },
@@ -44,10 +47,18 @@ export function fakeServices(overrides: Partial<{ [K in keyof AppServices]: Part
 export async function renderWithServices(ui: ReactElement, services: AppServices) {
   // gcTime: Infinity keeps React Query from scheduling cache-GC timers that outlive the test.
   const queryClient = new QueryClient({
-    defaultOptions: { queries: { retry: false, gcTime: Infinity }, mutations: { retry: false, gcTime: Infinity } },
+    defaultOptions: {
+      queries: { retry: false, gcTime: Infinity },
+      mutations: { retry: false, gcTime: Infinity },
+    },
   });
   return render(
-    <SafeAreaProvider initialMetrics={{ frame: { x: 0, y: 0, width: 390, height: 844 }, insets: { top: 0, left: 0, right: 0, bottom: 0 } }}>
+    <SafeAreaProvider
+      initialMetrics={{
+        frame: { x: 0, y: 0, width: 390, height: 844 },
+        insets: { top: 0, left: 0, right: 0, bottom: 0 },
+      }}
+    >
       <QueryClientProvider client={queryClient}>
         <ServicesProvider services={services}>
           <AuthProvider>{ui}</AuthProvider>
@@ -58,7 +69,12 @@ export async function renderWithServices(ui: ReactElement, services: AppServices
 }
 
 export function fakeNavigation() {
-  return { navigate: jest.fn(), replace: jest.fn(), setOptions: jest.fn(), goBack: jest.fn() } as never;
+  return {
+    navigate: jest.fn(),
+    replace: jest.fn(),
+    setOptions: jest.fn(),
+    goBack: jest.fn(),
+  } as never;
 }
 
 const approximate = {
@@ -96,8 +112,16 @@ export function detail(overrides: Partial<MeetupDetail> = {}): MeetupDetail {
   return {
     ...summary(),
     attendees: [
-      { userId: 'a1000000-0000-4000-8000-000000000002', displayName: 'Jordan Price', rsvpAt: '2026-10-29T10:00:00.000Z' },
-      { userId: 'a1000000-0000-4000-8000-000000000004', displayName: 'Riley Chen', rsvpAt: '2026-10-29T10:01:00.000Z' },
+      {
+        userId: 'a1000000-0000-4000-8000-000000000002',
+        displayName: 'Jordan Price',
+        rsvpAt: '2026-10-29T10:00:00.000Z',
+      },
+      {
+        userId: 'a1000000-0000-4000-8000-000000000004',
+        displayName: 'Riley Chen',
+        rsvpAt: '2026-10-29T10:01:00.000Z',
+      },
     ],
     ...overrides,
   };

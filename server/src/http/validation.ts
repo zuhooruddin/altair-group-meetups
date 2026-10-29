@@ -2,7 +2,11 @@ import type { z } from 'zod';
 import { AppError } from '../domain/errors';
 
 /** Validates untrusted input with a shared schema; 400 with field-level issues on failure. */
-export function parseInput<S extends z.ZodType>(schema: S, value: unknown, what: string): z.infer<S> {
+export function parseInput<S extends z.ZodType>(
+  schema: S,
+  value: unknown,
+  what: string,
+): z.infer<S> {
   const result = schema.safeParse(value);
   if (result.success) return result.data;
   throw new AppError(
