@@ -19,7 +19,7 @@ and seed.
 | Shared contract | `packages/shared`: Zod 4 request/response schemas imported by the server **and** the app.                                                                                                            |
 | App             | Expo (SDK 58) React Native: sign-in, group meetup list, create, detail with map + RSVP + creator-only cancel, bonus edit.                                                                            |
 | Privacy         | Members who have not RSVP'd get an offset 400 m area, never the exact coordinates or place name. Home locations are not readable by any client-facing role.                                          |
-| Tests           | 223 offline tests (embedded Postgres 17 running the real migrations + seed) and a hosted suite against real Supabase Auth/PostgREST/Postgres.                                                        |
+| Tests           | 224 offline tests (embedded Postgres 17 running the real migrations + seed) and a hosted suite against real Supabase Auth/PostgREST/Postgres.                                                        |
 
 ## Architecture
 
