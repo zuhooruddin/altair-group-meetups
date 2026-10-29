@@ -199,6 +199,18 @@ the way, from that log:
   spawns the real entry point under Node (it fails if the fix is reverted). The fix's commit
   message was truncated by PowerShell quoting; rather than rewrite history, the full message is
   attached as a `git notes` entry (`git log --notes`).
+- **A "dry run" that was not one.** `npm run db:push -- --dry-run` in Windows PowerShell applied
+  the migrations: PowerShell strips the bare `--`, so `--dry-run` reached npm, not the script. The
+  target was the intended, verified-empty hosted project, so the end state was correct, but the
+  review step was skipped. Added `npm run db:push:dry` (no `--` needed) and a README warning.
+- **A dependency "fix" that was wrong.** `expo install --check` once asked for `react-native`
+  0.88.0, later 0.88.1 (the pin in `expo@58.0.21` itself, and what the lockfile resolved). The
+  first change was reverted in a follow-up commit rather than rewritten.
+- **"A non-creator can edit a meetup."** Investigated on the hosted project: the database lets only
+  the creator update the meetup or its meeting point (five other personas change 0 rows), the app
+  shows Edit only to the creator, and the API returns 403/404. No defect; the real gap was that
+  hosted tests covered edit authorization only through the API, so DB-level hosted tests were
+  added.
 - A meetup whose creator's profile is not visible (left the group) would have disappeared from
   lists with an inner join; the queries use a left join and "Former member".
 
@@ -213,6 +225,11 @@ the way, from that log:
 > - Where I disagreed with the agent:
 
 ## 10. Setup time and environment notes
+
+- Hosted boot (migrations, seed, a seed sign-in) took minutes once the connection string was right.
+  What slowed it down: the dashboard's _direct_ connection host is IPv6-only and unreachable from
+  an IPv4 network (use the Session pooler string), and the pooler string is shown with a literal
+  `[YOUR-PASSWORD]` placeholder that has to be replaced.
 
 - No Docker on the development machine, so the hosted path (README Path B) is the only one used.
 - The machine had Node 20; Expo SDK 58 (the SDK current Expo Go runs) requires Node ≥ 22.13. A

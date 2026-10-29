@@ -3,127 +3,155 @@
 Status legend: **PASS** = actually verified · **FAIL** = tested and failed · **BLOCKED** = could not
 be verified, with the reason · **NOT IMPLEMENTED**.
 
-Environment: Windows 11, portable Node 22.23.4 (npm 11.21.1) in `.tools/`, Expo SDK 58 /
-React Native 0.88.0, Android 37 emulator (x86_64, 4 GB) with Expo Go. Database verification
-offline on **PGlite (Postgres 17, WASM)** running the real migrations and the provided seed over a
-Supabase shim (roles, `auth` tables, default grants, `realtime.messages`).
+Environment: Windows 11, portable Node 22.23.4 (npm 11.21.1) in `.tools/`; hosted Supabase
+(Postgres 17.11, Session pooler, us-west-2); Expo SDK 58 / React Native 0.88.1; Android 37 emulator
+(x86_64, 4 GB) with Expo Go. Offline database verification on **PGlite (Postgres 17)** running the
+real migrations and the provided seed over a Supabase shim.
 
-> **Current blocker:** no hosted Supabase credentials were available while this report was written
-> (`.env` not yet created). Everything that needs real Supabase Auth, PostgREST, Realtime or the
-> hosted database, and every on-device flow past the configuration screen, is **BLOCKED**, not
-> passed. The hosted suite (`npm run test:hosted`) is written and type-checked but has **not been
-> run**.
+## Commands executed and results
 
-## Commands executed (final run) and results
+| Command / action                                                          | Result                                                                                              |
+| ------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| `npm run test --workspace @altair/shared`                                 | **18 passed**                                                                                       |
+| `cd server && npx vitest run --project unit`                              | **17 passed**                                                                                       |
+| `cd server && npx vitest run --project offline`                           | **140 passed** (DB/RLS 55 · API suite · Realtime auth 12)                                           |
+| `cd mobile && npx jest`                                                   | **49 passed** (8 suites)                                                                            |
+| `npm run typecheck` · `npx eslint .` · `npx prettier --check .`           | 0 errors · 0 problems · formatted                                                                   |
+| `npm run db:inspect` (before)                                             | empty project: PG 17.11, no public tables, no migration history                                     |
+| `npm run db:push`                                                         | 6 migrations applied in order (starter first); see E-5 for how                                      |
+| `npm run db:seed`                                                         | provided seed unchanged + PART 2: 8 accounts/identities, 8 profiles, 2 groups, 8 memberships, 3/3/3 |
+| password grant for all 8 seed accounts; wrong password                    | 8 × HTTP 200 with token; wrong password HTTP 400                                                    |
+| `npm run test:hosted` (full)                                              | **85 passed** (2 files, 347 s)                                                                      |
+| hosted edit-RLS tests added afterwards (`-t "edit authorization"`)        | **4 passed**                                                                                        |
+| real server process `/health`, no/bad token, malformed JSON without token | 200 / 401 / 401 / 401                                                                               |
+| on-device E2E (below), API probes as real users, Realtime channel probes  | all as expected                                                                                     |
+| `npx expo install --check`                                                | up to date (after 6871c72)                                                                          |
+| `npm audit --omit=dev`                                                    | findings only in Expo CLI/build tooling (accepted risk, below)                                      |
 
-| Command                                                                                             | Result                                                                                          |
-| --------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `npm run test --workspace @altair/shared`                                                           | 1 file, **18 passed**                                                                           |
-| `cd server && npx vitest run --project unit`                                                        | 3 files, **17 passed**                                                                          |
-| `cd server && npx vitest run --project offline`                                                     | 3 files, **140 passed** (DB/RLS 55 · API suite · Realtime auth 12)                              |
-| `cd mobile && npx jest`                                                                             | 8 suites, **48 passed**                                                                         |
-| `npm run typecheck` (shared, server, mobile)                                                        | 0 errors                                                                                        |
-| `npx eslint .`                                                                                      | 0 problems                                                                                      |
-| `npx prettier --check .`                                                                            | all files formatted                                                                             |
-| `npx expo export --platform android`                                                                | Hermes bundle built; shared schemas present in bytecode; no `service_role` / `home_lat` strings |
-| `npx expo install --check`                                                                          | dependencies match SDK 58 (after fix, see D-6)                                                  |
-| real server process: `/health`, `/v1/me/groups` (no token, bad token), malformed JSON without token | 200 / 401 / 401 / 401                                                                           |
-| Expo Go on Android emulator                                                                         | app bundle loads and renders its own configuration screen                                       |
-| `npm run test:hosted`                                                                               | **not run (BLOCKED: no credentials)**                                                           |
-| `npm audit --omit=dev`                                                                              | 8 findings, all in Expo CLI/build tooling (see Code quality)                                    |
+**Offline total: 224 passed, 0 failed. Hosted: 89 passed, 0 failed.** Mutation checks (each
+reverted): weakening the exact-point RLS policy + service check → 12 failures; weakening the edit
+policy → 1 failure; removing `"type": "module"` from shared → startup test fails; un-awaiting a
+`render` → lint error.
 
-**Total offline: 223 passed, 0 failed.** Mutation checks (each reverted afterwards): weakening the
-exact-point RLS policy + service check → 12 failures; weakening the edit RLS policy → 1 failure;
-removing `"type": "module"` from shared → startup test fails; un-awaiting a `render` → lint error.
+## On-device end-to-end (Android emulator, Expo Go, hosted backend)
+
+| Step                                                   | Observed                                                                                                        | Result |
+| ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------- | ------ |
+| Sign in as Sam (member, no RSVP)                       | home shows only Maple Street Walkers                                                                            | PASS   |
+| Saturday loop in the list                              | "Approximate area · RSVP to see the spot", no place name                                                        | PASS   |
+| Detail before RSVP                                     | 400 m circle on the map, "Somewhere in the highlighted area", no place name/coordinates; no Edit/Cancel         | PASS   |
+| RSVP                                                   | map switches to the exact pin, "North gate, Linden Park 40.01205, -99.98452"; Who's going (3) incl. "Sam (you)" | PASS   |
+| Withdraw                                               | "Your RSVP was withdrawn", back to the approximate circle, no place name, 2 going                               | PASS   |
+| Sign in as Avery (creator)                             | exact point without RSVP; "You're hosting"; Edit meetup + Cancel meetup shown                                   | PASS   |
+| Cancel (with confirmation dialog)                      | "Cancel this meetup? … can't be undone" → Cancelled badge + banner; stays visible                               | PASS   |
+| Sam after cancel                                       | marked cancelled in list and detail; "Cannot RSVP"; API RSVP → 409 MEETUP_CANCELLED                             | PASS   |
+| Withdraw after cancel (Jordan, API)                    | 200, attendees 2 → 1                                                                                            | PASS   |
+| Edit a cancelled meetup (Avery, API)                   | 409 MEETUP_CANCELLED                                                                                            | PASS   |
+| Sign in as Taylor (outsider)                           | "You're not in any walking groups yet"                                                                          | PASS   |
+| Taylor via API: detail / attendees / map / group list  | 404 / 404 / 404 / 404, generic messages                                                                         | PASS   |
+| Taylor via PostgREST: meetups / rsvps / meeting points | `[]` / `[]` / `[]`; users: only her own id + name                                                               | PASS   |
+| Bonus B: Jordan → Live walk + simulator (12 walkers)   | channel "Live"; "12 walkers · 9 on screen"; the 3 culled are the simulator's 3 far-away walkers; 0 dropped      | PASS   |
+| Bonus B: private channel on hosted Realtime            | Jordan, Avery SUBSCRIBED; Sam, Quinn, Taylor "Unauthorized … Channel topic"                                     | PASS   |
+
+Reference meetups were restored afterwards (`npm run db:reset-reference`).
 
 ## Section results
 
-| Section           | Status                                               | Tests run                                                                                                                                                                                                                            | Issues found       | Issues fixed | Remaining                                                                                         |
-| ----------------- | ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------ | ------------ | ------------------------------------------------------------------------------------------------- |
-| Database          | **PASS** offline · **BLOCKED** hosted                | migrations + provided seed + PART 2 applied on PG 17; counts (8 users, 8 memberships, 3 meetups, 3 points, 3 RSVPs); constraints, triggers, approximate-area properties (radius 400 ≥ 300, centre 120–280 m away, random per meetup) | none in SQL        | —            | `db push` to hosted not yet run                                                                   |
-| Authentication    | **PASS** offline · **BLOCKED** hosted                | missing/invalid/malformed bearer → 401 on every route (inject + real HTTP); sign-in screen validation                                                                                                                                | none               | —            | real seed sign-in, wrong password, token verification via Supabase Auth: in hosted suite, not run |
-| Authorization     | **PASS** offline                                     | outsider/member/attendee/creator/multi-group at DB level (as `authenticated` and `altair_api_writer`) and API level; app cannot write directly (42501 on insert/update/delete/execute)                                               | none               | —            | PostgREST bypass attempts are hosted-only                                                         |
-| Meetups           | **PASS** offline                                     | create (trim, creator from session, future start, all validation cases), list order, detail, cancel (creator only, final, stays visible, no reopen)                                                                                  | none               | —            | —                                                                                                 |
-| RSVPs             | **PASS** offline · **BLOCKED** race                  | RSVP/withdraw, idempotent, own-only, cancelled/started rejection, withdraw after cancel, membership required                                                                                                                         | none               | —            | RSVP-vs-cancel race test needs two real connections (hosted)                                      |
-| Maps              | **PASS** logic · **BLOCKED** on-device               | server returns approximate (no name/coords) vs exact per meetup; map component draws circle vs marker; detail switches to exact after RSVP (component test)                                                                          | none               | —            | visual map on device with real data                                                               |
-| Privacy           | **PASS** offline · **BLOCKED** PostgREST             | home coords never in any of 70+ API responses scanned; `home_lat`/`select *` denied at DB; exact point/name absent before RSVP; RSVP to one meetup reveals nothing else; identical 404s for outsiders; generic 500s                  | none               | —            | direct PostgREST checks (hosted)                                                                  |
-| Mobile UI         | **PASS** components · **BLOCKED** flows              | 48 Jest tests (states, RSVP flow, creator-only actions, form validation, edit, live hook); app launches in Expo Go                                                                                                                   | D-2, D-3, D-6, D-7 | all          | sign-in → list → create → detail → RSVP → cancel on device needs backend                          |
-| Backend           | **PASS**                                             | validation, auth hook, error mapping (SQLSTATE → HTTP), response shaping, real process startup                                                                                                                                       | D-1                | yes          | —                                                                                                 |
-| Code quality      | **PASS**                                             | typecheck, lint, format, 0 import cycles (70 files), layer-boundary greps, secret scans before each commit                                                                                                                           | D-4                | yes          | audit findings in Expo tooling (accepted, below)                                                  |
-| End-to-End        | **BLOCKED**                                          | —                                                                                                                                                                                                                                    | —                  | —            | needs hosted project + device run (see checklist below)                                           |
-| Bonus A: edit     | **PASS** offline · **BLOCKED** on-device             | creator edits; others 403/0 rows; outsider 404; cancelled 409/AL004; future-start re-check; strict body; area recomputed on move; direct update denied                                                                               | D-5                | yes          | —                                                                                                 |
-| Bonus B: live map | **PASS** logic + channel auth · **BLOCKED** live run | payload validation, interpolation, out-of-order, duplicates, stale, clock skew, culling, prune; channel allowed only for creator/attendees of scheduled meetups                                                                      | D-3 (hooks)        | yes          | real Realtime broadcast + on-device animation; **no FPS/latency/battery numbers measured**        |
+| Section           | Status   | Evidence                                                                                                                                         | Remaining                                            |
+| ----------------- | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------- |
+| Database          | **PASS** | offline + hosted: migrations, seed counts, constraints, triggers, area properties                                                                | —                                                    |
+| Authentication    | **PASS** | seed sign-in (8/8), wrong password refused, invalid/missing tokens 401 (inject, real HTTP, hosted)                                               | —                                                    |
+| Authorization     | **PASS** | roles × meetups at DB, API and PostgREST level, offline and hosted; edit RLS on hosted (4 new tests)                                             | —                                                    |
+| Meetups           | **PASS** | create/list/detail/cancel incl. validation; on device                                                                                            | —                                                    |
+| RSVPs             | **PASS** | RSVP/withdraw/idempotency/cancelled/started; hosted race (RSVP blocked behind an uncommitted cancel is rejected); on device                      | —                                                    |
+| Maps              | **PASS** | approximate circle vs exact pin, switch after RSVP and back after withdraw, on device                                                            | —                                                    |
+| Privacy           | **PASS** | no home location in any response; `home_lat`/`select *` denied (offline + PostgREST); exact point/name absent before RSVP; outsiders see nothing | —                                                    |
+| Mobile UI         | **PASS** | 49 Jest tests; full journey on device                                                                                                            | small-screen layouts only checked on one device size |
+| Backend           | **PASS** | validation, auth hook, error mapping, real process                                                                                               | —                                                    |
+| Code quality      | **PASS** | typecheck, lint, format, 0 import cycles, secret scans                                                                                           | audit findings in Expo tooling (accepted)            |
+| End-to-End        | **PASS** | table above                                                                                                                                      | —                                                    |
+| Bonus A: edit     | **PASS** | contract, DB, API, Jest; hosted DB-level creator-only test; on device: Edit shown to creator only                                                | edit form itself not driven on device                |
+| Bonus B: live map | **PASS** | engine/hook/channel-auth tests; live on device over hosted Realtime with culling                                                                 | **no FPS, latency or battery numbers measured**      |
 
-## Defects found and resolved
+## Investigation: "a non-creator can edit a meetup"
 
-| #   | Severity             | Defect                                                                                                                                | Resolution                                                                                    |
-| --- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
-| D-1 | Critical             | `npm run server` crashed on import (`@altair/shared` loaded as CommonJS by Node); all tests passed because Vite/Metro masked it       | `"type": "module"` on shared (9e227bb); regression test spawns the real entry point (11606fd) |
-| D-2 | High (test validity) | Testing Library 14 made `render`/`fireEvent` async; 18/23 tests silently not rendering                                                | tests awaited; `no-floating-promises` lint rule for app tests                                 |
-| D-3 | High                 | Rules-of-hooks violations (hook after early return in detail screen; `useIsFocused() && useAppActive()` short-circuit in live screen) | fixed before first run                                                                        |
-| D-4 | Critical (process)   | A mutation-test restore used `git checkout` on an untracked file; the permissive policy stayed on disk                                | detected, restored by hand, grep confirms no `using (true)` anywhere                          |
-| D-5 | Low                  | Test asserting "writer cannot change title" became wrong once the edit bonus granted it                                               | rewritten to assert group/creator stay immutable                                              |
-| D-6 | Medium               | `react-native` 0.88.1 vs 0.88.0 expected by SDK 58                                                                                    | `expo install --fix` (103443d)                                                                |
-| D-7 | Low                  | Jest open handles from React Query GC timers; a loading-state test racing a resolved promise                                          | `gcTime: Infinity` in tests; deterministic promise                                            |
-| E-1 | Environment          | npm 10 arborist crash on install                                                                                                      | npm 11 in the portable toolchain                                                              |
-| E-2 | Environment          | first npm 11 install changed the user-global npm                                                                                      | reverted exactly; reinstalled into `.tools/`                                                  |
-| E-3 | Environment          | Expo Go killed by Android low-memory killer on a 2 GB AVD                                                                             | AVD raised to 4 GB                                                                            |
-| E-4 | Process              | a commit message truncated by PowerShell quoting                                                                                      | not rewritten; full text in `git notes`                                                       |
+Reported during QA. The hosted Saturday loop's meeting point had indeed been changed (name
+"Fountain plaza, Town Green" with coordinates that are not Fountain plaza's, i.e. a manual edit in
+the app). Findings: as `altair_api_writer` only the creator (Avery) can update the meetup or its
+meeting point; Jordan, Sam, Riley (both groups), Quinn and Taylor change 0 rows; the app shows Edit
+only when `viewer.canEdit` (creator and scheduled) and the Edit screen re-checks it; the API returns
+403 (member) / 404 (outsider). **No authorization defect was found**; the database cannot say who
+made the earlier edit (no audit log). The genuine gap was **coverage**: hosted tests exercised edit
+authorization only through the API, whose 403 would mask a database hole. Four hosted DB-level tests
+now cover it (e1b4b7d).
 
-**Unresolved defects:** none known. **Accepted risk:** `npm audit --omit=dev` reports `zod@3.25.76`
-(high) and `deepmerge` (low) **only inside `@expo/cli` / `@expo/config`** (dev server and build
-tooling). The app, the API and the shared contract resolve `zod@4.6.7`. npm's suggested fix is a
-downgrade to Expo 54 (breaking, and incompatible with Expo Go SDK 58), so it was not applied.
+## Defects and process issues
 
-## End-to-end checklist (to run once hosted credentials exist)
+| #   | Severity             | Issue                                                                                                                               | Resolution                                                                                   |
+| --- | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| D-1 | Critical             | `npm run server` crashed on import (shared loaded as CommonJS); tests masked it                                                     | `"type": "module"` (9e227bb); startup regression test (11606fd)                              |
+| D-2 | High (test validity) | Testing Library 14 async `render`/`fireEvent`; tests silently not rendering                                                         | awaited; `no-floating-promises` rule                                                         |
+| D-3 | High                 | two rules-of-hooks violations                                                                                                       | fixed before first run                                                                       |
+| D-4 | Critical (process)   | mutation-test restore missed an untracked file; permissive policy left on disk                                                      | detected, restored, grep-verified                                                            |
+| D-5 | Low                  | test asserting "title immutable" became wrong after the edit bonus                                                                  | rewritten                                                                                    |
+| D-6 | Medium               | `react-native` pin: 103443d set 0.88.0 following a transient `expo install --check` result; Expo now (and expo 58.0.21) pins 0.88.1 | corrected to 0.88.1 (6871c72); manifest, lock, install and Expo pin agree                    |
+| D-7 | Low                  | Jest open handles; a racing loading-state test                                                                                      | `gcTime: Infinity`; deterministic promise                                                    |
+| D-8 | Low                  | hosted edit authorization covered only through the API                                                                              | 4 hosted DB-level tests (e1b4b7d)                                                            |
+| E-1 | Environment          | npm 10 arborist crash                                                                                                               | npm 11 in `.tools/`                                                                          |
+| E-2 | Environment          | first npm 11 install changed the user-global npm                                                                                    | reverted exactly                                                                             |
+| E-3 | Environment          | Expo Go killed by the low-memory killer on a 2 GB AVD                                                                               | AVD 4 GB                                                                                     |
+| E-4 | Process              | commit message truncated by PowerShell quoting                                                                                      | full text in `git notes`, history not rewritten                                              |
+| E-5 | Process              | `npm run db:push -- --dry-run` in PowerShell **applied** the migrations: PowerShell strips the bare `--`                            | target was the intended, verified-empty project; `db:push:dry` script + README warning added |
+| E-6 | Environment          | an API server from a previous session kept port 4000                                                                                | stopped; restarted under control                                                             |
 
-Sign in as Sam → Maple → open Saturday → map shows approximate circle → RSVP → attendee list adds
-Sam, map shows exact pin + "North gate, Linden Park" → withdraw → back to circle → sign in as Avery
-→ cancel Saturday (confirm) → marked cancelled → Sam's RSVP rejected → sign in as Taylor → no
-groups; direct API/PostgREST reads of the meetup return nothing. Each step: **BLOCKED** until run.
+**Unresolved:** none blocking. **Cosmetic, not changed** (in the in-progress redesign): a cancelled
+meetup's card still says "RSVP to see the spot"; `SplashScreen.setOptions` logs a warning in Expo Go
+(supported only in development builds). **Accepted risk:** `npm audit --omit=dev` findings
+(`zod@3` in `@expo/cli`, `deepmerge` in `@expo/config`) are dev-server/build tooling only; the app,
+API and contract use `zod@4.6.7`; npm's fix is a breaking downgrade to Expo 54.
 
 ## Requirements traceability
 
-| Requirement                                                                          | Implementation                                                    | Test                                                         | Status                                            |
-| ------------------------------------------------------------------------------------ | ----------------------------------------------------------------- | ------------------------------------------------------------ | ------------------------------------------------- |
-| Timestamped migrations, starter first                                                | `supabase/migrations/*`                                           | offline harness applies all in order                         | PASS (offline) / BLOCKED (hosted push)            |
-| Members read their group's meetups + attendees; outsiders nothing                    | RLS in `…120200_access_control.sql`                               | `database-rls.test.ts`, API suite "outsider"                 | PASS (offline)                                    |
-| Creator-only cancel                                                                  | `meetups_update_creator` + service                                | DB "writer role…", API "creator"                             | PASS (offline)                                    |
-| Cancelled visible, final, no new RSVP, withdraw allowed                              | guard triggers                                                    | DB "domain rules…", API cancel test                          | PASS (offline)                                    |
-| No RSVP once started                                                                 | `guard_rsvp_insert`                                               | DB + API "started meetup"                                    | PASS (offline)                                    |
-| All writes through server code with shared Zod                                       | routes + `parseInput`; `authenticated` has no write grants        | API validation tests; DB "app cannot write directly"         | PASS (offline); PostgREST variant BLOCKED         |
-| Reject non-future start on create                                                    | Zod refine + `insert_meetup` AL006 + RLS check                    | shared, DB, API tests                                        | PASS                                              |
-| One shared contract imported by server and app                                       | `packages/shared`                                                 | typecheck of both; bundle contains shared strings            | PASS                                              |
-| Four-role access tests incl. multi-group + map data                                  | `api-access.suite.ts`                                             | offline run                                                  | PASS (offline) / BLOCKED (hosted run)             |
-| Screens: sign-in, list (loading/empty/error), create, detail + RSVP + creator cancel | `mobile/src/features/*`                                           | Jest screen tests; launch on emulator                        | PASS (components) / BLOCKED (device flows)        |
-| Map follows decision, updates after RSVP                                             | `MeetingPointMap`, `useRsvp` cache update                         | component + API tests                                        | PASS (logic) / BLOCKED (device)                   |
-| Approximate ≥ 300 m, not centred on point, no coords/name before RSVP                | `app.approximate_area`, split table                               | DB + API leak tests                                          | PASS (offline)                                    |
-| Home location never exposed                                                          | column grants; explicit selects; response shaping                 | DB 42501 tests; response scan                                | PASS (offline) / BLOCKED (PostgREST)              |
-| Note, run instructions                                                               | `README.md`, `ENGINEERING_NOTES.md`                               | instructions followed offline; hosted steps not yet executed | PASS (written) / BLOCKED (clean-start hosted run) |
-| Screen recording, exported AI log                                                    | —                                                                 | —                                                            | NOT IMPLEMENTED here (developer deliverables)     |
-| Bonus A edit                                                                         | `…140000_edit_meetup.sql`, PATCH route, Edit screen               | contract, DB, API, Jest                                      | PASS (offline)                                    |
-| Bonus B realtime map                                                                 | `…150000_live_walk_realtime.sql`, `features/live-walk`, simulator | engine + hook + channel-auth tests                           | PASS (logic/auth) / BLOCKED (live)                |
+| Requirement                                                                | Implementation                                         | Test / evidence                                   | Status                                   |
+| -------------------------------------------------------------------------- | ------------------------------------------------------ | ------------------------------------------------- | ---------------------------------------- |
+| Timestamped migrations, starter first                                      | `supabase/migrations/*`                                | offline harness; hosted `db push` history         | PASS                                     |
+| Members read group meetups + attendees; outsiders nothing                  | RLS `…120200_access_control.sql`                       | DB, API, PostgREST (hosted), device               | PASS                                     |
+| Creator-only cancel                                                        | `meetups_update_creator` + service                     | DB, API, device                                   | PASS                                     |
+| Cancelled visible, final, no new RSVP, withdraw allowed                    | guard triggers                                         | DB, API, device + API probe                       | PASS                                     |
+| No RSVP once started                                                       | `guard_rsvp_insert`                                    | DB + API "started meetup"                         | PASS                                     |
+| All writes through server code with shared Zod; app cannot write directly  | routes + `parseInput`; `authenticated` read-only       | API validation; PostgREST write attempts (hosted) | PASS                                     |
+| Reject non-future start on create                                          | Zod + `insert_meetup` AL006 + RLS                      | shared, DB, API                                   | PASS                                     |
+| One shared contract imported by server and app                             | `packages/shared`                                      | typecheck; bundle; device                         | PASS                                     |
+| Four-role access tests incl. multi-group + map data                        | `api-access.suite.ts`                                  | offline + hosted                                  | PASS                                     |
+| Screens: sign-in, list (loading/empty/error), create, detail, RSVP, cancel | `mobile/src/features/*`                                | Jest + device                                     | PASS                                     |
+| Map follows decision, updates after RSVP                                   | `MeetingPointMap`, cache update                        | Jest + device                                     | PASS                                     |
+| Approximate ≥ 300 m, not centred, no coords/name before RSVP               | `app.approximate_area`, split table                    | DB, API, device                                   | PASS                                     |
+| Home location never exposed                                                | column grants, explicit selects, response shaping      | DB, API scan, PostgREST                           | PASS                                     |
+| Note + run instructions                                                    | `README.md`, `ENGINEERING_NOTES.md`                    | followed against the hosted project               | PASS                                     |
+| Screen recording, exported AI log, developer review section                | —                                                      | —                                                 | NOT IMPLEMENTED (developer deliverables) |
+| Bonus A edit                                                               | `…140000_edit_meetup.sql`, PATCH, Edit screen          | contract, DB (offline + hosted), API, Jest        | PASS                                     |
+| Bonus B realtime map                                                       | `…150000_live_walk_realtime.sql`, `features/live-walk` | tests + live on device                            | PASS (performance not measured)          |
 
 ## Starter README compliance
 
-| README instruction                                 | Where                                                              | How verified                               | Result                            |
-| -------------------------------------------------- | ------------------------------------------------------------------ | ------------------------------------------ | --------------------------------- |
-| Hosted path, starter applied once (via migrations) | starter = first migration; README step 3 warns not to paste it too | file hash equals provided starter          | PASS (file) / BLOCKED (push)      |
-| Own migrations after the starter                   | timestamps `2026102912…` > `20261001…`                             | sorted apply in harness                    | PASS                              |
-| Seed PART 1 as owner (SQL editor)                  | README step 3                                                      | applied unchanged in harness               | PASS (offline) / BLOCKED (hosted) |
-| Adapt and load PART 2 after tables exist           | `supabase/seed/part2_reference_meetups.sql`                        | applied after migrations                   | PASS (offline)                    |
-| Seed accounts sign in                              | hosted test "signs in with the fixture password"                   | not run                                    | BLOCKED                           |
-| Expo app, one platform                             | Android via Expo Go                                                | launched on emulator                       | PASS (launch)                     |
-| 10.0.2.2 / LAN IP for API URL                      | `mobile/.env.example`, README table                                | —                                          | PASS (documented)                 |
-| Service-role key never in the app                  | not used anywhere; bundle scan                                     | string scan                                | PASS                              |
-| Shared Zod, one major, Metro resolves it           | zod 4.6.7 everywhere in app/server/shared; `metro.config.js`       | `npm ls zod`; `expo export`; device launch | PASS                              |
-| Writes via server endpoints validated with Zod     | see traceability                                                   | tests                                      | PASS (offline)                    |
-| react-native-maps, no tokens in repo               | `MeetingPointMap`, no keys                                         | secret scans                               | PASS                              |
-| Run instructions, setup time note                  | README; ENGINEERING_NOTES §10                                      | —                                          | PASS (written)                    |
+| Instruction                                  | Verification                                                                                                                                                | Result |
+| -------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| Hosted path; starter applied exactly once    | migration history shows the starter once, first                                                                                                             | PASS   |
+| Own migrations after the starter             | history order                                                                                                                                               | PASS   |
+| Seed PART 1 as owner                         | `db:seed` over the owner connection; counts                                                                                                                 | PASS   |
+| Adapt and load PART 2 after the tables exist | counts 3/3/3                                                                                                                                                | PASS   |
+| Seed accounts sign in                        | 8/8 password grants                                                                                                                                         | PASS   |
+| Expo app on one platform                     | Android emulator, Expo Go                                                                                                                                   | PASS   |
+| 10.0.2.2 for the emulator API URL            | used in the E2E run                                                                                                                                         | PASS   |
+| Service-role key never in the app            | not used anywhere; bundle and key-prefix checks                                                                                                             | PASS   |
+| Shared Zod, one major, Metro resolves it     | `npm ls zod`; bundle; device                                                                                                                                | PASS   |
+| Writes via validated server endpoints        | tests + PostgREST write attempts refused                                                                                                                    | PASS   |
+| react-native-maps, no tokens in repo         | secret scans                                                                                                                                                | PASS   |
+| Boot in under 30 minutes                     | migrations + seed + sign-in check took minutes once credentials were correct; the delay was the IPv6-only direct host and the `[YOUR-PASSWORD]` placeholder | PASS   |
 
 ## Final assessment
 
-The slice is implemented end to end and verified **against a real Postgres 17 running the real
-migrations and seed**, through the real HTTP layer, and on-device up to the configuration screen.
-It is **not yet verified against hosted Supabase** or as a full on-device user journey; both are
-blocked only on credentials, and the hosted test suite and E2E checklist are ready to run.
+All mandatory requirements are implemented and verified against hosted Supabase and on an Android
+device. Both bonuses work; the live-map performance characteristics are designed for but not
+measured. The developer-owned deliverables (recording, exported AI log, the developer review section
+of ENGINEERING_NOTES.md) remain.
