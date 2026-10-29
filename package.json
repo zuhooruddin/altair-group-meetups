@@ -1,0 +1,35 @@
+{
+  "name": "altair-meetups",
+  "private": true,
+  "description": "ALTAIR group meetups slice: Supabase schema + RLS, Fastify write layer, shared Zod contract, Expo React Native app.",
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "workspaces": [
+    "packages/shared",
+    "server",
+    "mobile"
+  ],
+  "scripts": {
+    "db:push": "supabase db push --db-url \"$DATABASE_URL\"",
+    "server": "npm run start --workspace @altair/server",
+    "server:dev": "npm run dev --workspace @altair/server",
+    "mobile": "npm run start --workspace @altair/mobile",
+    "test": "npm run test --workspace @altair/shared && npm run test --workspace @altair/server && npm run test --workspace @altair/mobile",
+    "test:offline": "npm run test --workspace @altair/shared && npm run test:offline --workspace @altair/server && npm run test --workspace @altair/mobile",
+    "test:hosted": "npm run test:hosted --workspace @altair/server",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.5",
+    "eslint": "^9.39.5",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.9.10",
+    "supabase": "^2.122.0",
+    "typescript": "~6.0.3",
+    "typescript-eslint": "^8.72.1"
+  }
+}
