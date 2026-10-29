@@ -175,6 +175,99 @@ describe('direct Data API writes are impossible (writes must go through the API)
   });
 });
 
+describe('edit authorization in the hosted database (bonus edit)', () => {
+  /** Runs `sql` as the API's writer role for `userId`; always rolled back. */
+  const asWriter = async (userId: string, sql: string, params: unknown[] = []) => {
+    const client = await owner.connect();
+    try {
+      await client.query('begin');
+      await client.query('set local role altair_api_writer');
+      await client.query(`select set_config('request.jwt.claims', $1, true)`, [
+        JSON.stringify({ sub: userId }),
+      ]);
+      try {
+        return { rows: (await client.query(sql, params)).rowCount ?? 0, code: undefined };
+      } catch (error) {
+        return { rows: 0, code: (error as { code?: string }).code };
+      }
+    } finally {
+      await client.query('rollback').catch(() => undefined);
+      client.release();
+    }
+  };
+  const setTitle = `update public.meetups set title = '[test] probe' where id = $1`;
+  const movePoint = `update public.meetup_meeting_points set place_name = 'probe' where meetup_id = $1`;
+
+  it('only the creator changes the meetup or its meeting point (RLS, not the API)', async () => {
+    expect(await asWriter(users.avery, setTitle, [meetups.saturdayLoop])).toEqual({
+      rows: 1,
+      code: undefined,
+    });
+    expect((await asWriter(users.avery, movePoint, [meetups.saturdayLoop])).rows).toBe(1);
+    for (const [name, id] of Object.entries({
+      jordan: users.jordan, // same group, attendee
+      sam: users.sam, // same group, no RSVP
+      riley: users.riley, // both groups, attendee
+      quinn: users.quinn, // other group
+      taylor: users.taylor, // outsider
+    })) {
+      expect((await asWriter(id, setTitle, [meetups.saturdayLoop])).rows, name).toBe(0);
+      expect((await asWriter(id, movePoint, [meetups.saturdayLoop])).rows, name).toBe(0);
+    }
+  });
+
+  it('the creator cannot move the meetup to another group, change its creator, or start it in the past', async () => {
+    const id = meetups.saturdayLoop;
+    expect(
+      (
+        await asWriter(users.avery, `update public.meetups set group_id = $2 where id = $1`, [
+          id,
+          groups.riverside,
+        ])
+      ).code,
+    ).toBe('42501');
+    expect(
+      (
+        await asWriter(users.avery, `update public.meetups set created_by = $2 where id = $1`, [
+          id,
+          users.sam,
+        ])
+      ).code,
+    ).toBe('42501');
+    expect(
+      (
+        await asWriter(
+          users.avery,
+          `update public.meetups set starts_at = now() - interval '1 hour' where id = $1`,
+          [id],
+        )
+      ).code,
+    ).toBe('AL006');
+  });
+
+  it('a cancelled meetup cannot be edited, even by its creator', async () => {
+    await owner.query(`update public.meetups set status = 'cancelled' where id = $1`, [
+      meetups.weeknightWalk,
+    ]);
+    expect((await asWriter(users.jordan, setTitle, [meetups.weeknightWalk])).code).toBe('AL004');
+    expect((await asWriter(users.jordan, movePoint, [meetups.weeknightWalk])).code).toBe('AL004');
+  });
+
+  it('a signed-in member cannot edit through PostgREST at all', async () => {
+    const avery = await clientAs('avery');
+    const res = await avery
+      .from('meetups')
+      .update({ title: 'direct' })
+      .eq('id', meetups.saturdayLoop);
+    expect(res.error?.code).toBe('42501');
+    const point = await avery
+      .from('meetup_meeting_points')
+      .update({ place_name: 'direct' })
+      .eq('meetup_id', meetups.saturdayLoop);
+    expect(point.error?.code).toBe('42501');
+  });
+});
+
 describe('concurrency: RSVP racing a cancel', () => {
   it('an RSVP blocked behind an uncommitted cancel is rejected once the cancel commits', async () => {
     const asMember = async (client: pg.PoolClient, userId: string) => {
