@@ -192,6 +192,13 @@ the way, from that log:
 - A test that asserted "the writer role cannot change a title" became wrong by design once the
   edit bonus granted that column; it was rewritten to assert what must remain impossible
   (changing group or creator).
+- **`npm run server` crashed on startup** although every test passed: the server is an ES module
+  and `packages/shared` was loaded by Node as CommonJS ("does not provide an export named …").
+  Vitest and Metro transform modules uniformly, so they masked it. Found by actually starting the
+  server; fixed by declaring the shared package `"type": "module"`, and a regression test now
+  spawns the real entry point under Node (it fails if the fix is reverted). The fix's commit
+  message was truncated by PowerShell quoting; rather than rewrite history, the full message is
+  attached as a `git notes` entry (`git log --notes`).
 - A meetup whose creator's profile is not visible (left the group) would have disappeared from
   lists with an inner join; the queries use a left join and "Former member".
 
