@@ -18,6 +18,8 @@
 --        and load it. The VALUES are what matter, not the column names.
 --
 -- Every seed account signs in with password:  altair-fixture-pass
+
+AltarRise
 --
 -- Personas (use them in your tests):
 --   Avery Lin      Maple Street Walkers only       creator of "Saturday morning loop"
