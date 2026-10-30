@@ -208,12 +208,87 @@ the service check made 12 tests fail; weakening the edit policy made its test fa
 
 ### My own review and hand changes
 
-> **To be completed by me before submission.** Only I can state this accurately; nothing here has
-> been written on my behalf.
->
-> - What I reviewed line by line, and what I checked by running it myself:
-> - What I changed by hand, and why:
-> - Where I disagreed with or overruled the agent:
+My own review and hand changes
+
+1. What I reviewed and verified myself
+
+During development, I actively reviewed the application's functionality, user experience, and implementation progress rather than relying solely on the AI agent's completion reports.
+
+My review included:
+
+Application functionality: I launched the Expo React Native application on an Android emulator and inspected the authentication screen, group selection, meetup listings, meetup creation, meetup details, RSVP controls, maps, and cancellation states.
+
+UI/UX quality: I identified issues with oversized group-selection cards, inconsistent layouts, spacing, visual hierarchy, and overall usability. I requested several design improvements to make the application more professional, consistent, and user-friendly.
+
+Creator permissions: During manual testing, I raised a concern that editing might be available for a meetup created by another user. I requested an investigation covering frontend permissions, backend authorization, and PostgreSQL RLS rather than assuming the issue was only visual.
+
+Project architecture: I inspected the monorepo structure and root package.json to confirm the separation of the React Native app, Fastify backend, shared Zod package, and Supabase migrations.
+
+Git history: I inspected the actual Git commit history using git status and git log --oneline to confirm that development milestones were preserved.
+
+Development environment: I tested the application's startup process on Windows and investigated issues involving Node.js versions, PowerShell execution restrictions, and the Android emulator.
+
+I also reviewed the assignment requirements against the implementation and emphasized that access control must be enforced by the database, not merely by hiding buttons or screens.
+
+These activities represent my manual functional and implementation review. I do not claim to have independently audited every source file line by line.
+
+2. What I changed by hand, and why
+
+My directly performed changes were primarily related to development setup, configuration, and application verification.
+
+I configured and troubleshot my local development environment, including identifying the correct portable Node.js 22 installation, using it without replacing my system-wide Node.js 20 installation, and switching to npm.cmd to work around PowerShell script-execution restrictions.
+
+I also inspected the running Android application, identified interface problems, and provided feedback and design references to guide subsequent improvements.
+
+For implementation-level code changes, I used AI-assisted development and requested corrections through explicit instructions. I have not independently established which source-code changes, if any, I personally typed by hand, so I am not presenting AI-generated changes as manually written code.
+
+My contribution included defining expectations, reviewing the working application, identifying issues, directing corrections, and checking development progress.
+
+3. Where I disagreed with or challenged the AI agent
+
+Database testing priorities
+
+When the agent proposed building a custom offline PostgreSQL harness using PGlite and a Supabase compatibility shim, I questioned whether that additional infrastructure was required by the challenge.
+
+My concern was that successful simulated tests would not necessarily prove authorization behavior in a real hosted Supabase environment.
+
+I prioritized actual database-level security verification, especially creator-only permissions, multi-group isolation, outsider access, and meeting-point privacy. The final project retained offline testing while also adding hosted Supabase verification.
+
+Creator-only editing
+
+I challenged the apparent ability to edit meetups owned by other users.
+
+Rather than accepting a frontend-only correction, I requested verification across the React Native interface, authenticated API endpoints, and database RLS policies.
+
+The subsequent investigation did not establish an authorization defect. However, it identified insufficient direct hosted database test coverage for editing permissions.
+
+Four additional hosted database-level authorization tests were added. This strengthened the verification of creator-only access.
+
+UI/UX quality
+
+I was not satisfied with the initial visual presentation, even though the application was functional.
+
+I requested improvements to screen layouts, navigation clarity, group selection, form presentation, map usability, and visual consistency.
+
+My objective was to make the application easier to understand and use without compromising its existing business rules or security requirements.
+
+Scope and implementation quality
+
+I emphasized completing the mandatory challenge requirements before investing effort in optional infrastructure or bonus features.
+
+I also insisted that testing reports distinguish actual executed results from assumptions and that the original Git history be preserved.
+
+4. What I learned from the review process
+
+This project reinforced that AI-generated code still requires independent evaluation.
+
+A successful build or a passing test suite does not automatically prove that the application is secure, usable, or complete.
+
+The most valuable review activities were exercising the application on an emulator, questioning unexpected behavior, checking authorization at multiple layers, and requiring test evidence for critical security claims.
+
+I treated AI assistance as an implementation accelerator rather than a replacement for engineering judgment.
+
+My focus was on defining requirements, identifying potential failures, challenging questionable assumptions, and ensuring that the submitted work reflected the actual implementation and verification results.
 
 ## 7. Verification
 
